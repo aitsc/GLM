@@ -21,3 +21,4 @@ tldextract
 transformers
 rouge_score
 fasttext==0.9.1  # 0.9.2 不稳定：https://blog.csdn.net/weixin_43891607/article/details/123201689
+unidecode

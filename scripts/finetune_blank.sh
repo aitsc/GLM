@@ -1,6 +1,6 @@
-DATA_ROOT=/root/data
-CHECKPOINT_PATH=/root/data/checkpoints
-SAVE_PATH=/root/data/finetune_checkpoints
+DATA_ROOT=data
+CHECKPOINT_PATH=data/checkpoints
+SAVE_PATH=data/finetune_checkpoints
 DATESTR=$(date +"%m-%d-%H-%M")
 
 MASK_RATIO=0.1
