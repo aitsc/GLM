@@ -65,8 +65,8 @@ test set, zero-shot
 | GLM-XXLarge (bi) | 72.35 | 11.33 |
 | GLM-XXLarge (uni) | 67.18 | 12.22 |
 | GPT-2 | 52.66 | 17.48 |
-| Megatron-LM (8.3B) | 66.51 | 10.81 |
-| Turing-NLG | 67.98 | 10.21 |
+| GPT (8.3B) + Megatron-LM | 66.51 | 10.81 |
+| Turing-NLG + Megatron-LM | 67.98 | 10.21 |
 
 ## Get Started
 ### Docker Image
