@@ -1,9 +1,10 @@
-DATA_ROOT=/dataset/fd5061f6/english_data/superglue
-CHECKPOINT_PATH=/dataset/fd5061f6/pretrained_models
-SAVE_PATH=/dataset/fd5061f6/finetune_checkpoints
+DATA_ROOT=data/english_data/superglue
+CHECKPOINT_PATH=data/checkpoints
 
 source $1    # Model
 source $2    # Task
+
+SAVE_PATH=data/finetune_checkpoints/${TASK_NAME}
 
 if [ -z $N_GPU ];then
   N_GPU=1

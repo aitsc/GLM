@@ -394,6 +394,13 @@ def add_finetune_config_args(parser):
     return parser
 
 
+def add_custom_args(parser: argparse.ArgumentParser):
+    import subprocess
+    group = parser.add_argument_group('custom', 'custom configurations')
+    group.add_argument('--spare_port', type=int, help='固定来自 utils.spare_port 的端口, 防止每次随机冲突', default=int(subprocess.check_output(["shuf -n 1 -i 10000-65535"], shell=True)))
+    return parser
+
+
 def get_args():
     """Parse all the args."""
 
@@ -405,6 +412,7 @@ def get_args():
     parser = add_text_generate_args(parser)
     parser = add_data_args(parser)
     parser = add_finetune_config_args(parser)
+    parser = add_custom_args(parser)
 
     # Include DeepSpeed configuration arguments
     parser = deepspeed.add_config_arguments(parser)

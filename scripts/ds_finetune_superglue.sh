@@ -1,17 +1,18 @@
-DATA_ROOT=/dataset/fd5061f6/tuteng/BlockLM/data
-CHECKPOINT_PATH=/dataset/fd5061f6/english_data/checkpoints
-SAVE_PATH=/dataset/fd5061f6/tuteng/BlockLM/finetune_checkpoints
+DATA_ROOT=data/english_data/superglue
+CHECKPOINT_PATH=data/checkpoints
 DATESTR=$(date +"%m-%d-%H-%M")
 
 source $1    # Model
 source $2    # Task
 
+SAVE_PATH=data/finetune_checkpoints/${TASK_NAME}
+
 NUM_WORKERS=1
-NUM_GPUS_PER_WORKER=8
+NUM_GPUS_PER_WORKER=1
 MP_SIZE=1
 MASTER_PORT=$(shuf -n 1 -i 10000-65535)
 
-OPTIONS_NCCL="NCCL_DEBUG=info NCCL_IB_DISABLE=0 NCCL_NET_GDR_LEVEL=2"
+OPTIONS_NCCL="NCCL_DEBUG=info NCCL_IB_DISABLE=6 NCCL_NET_GDR_LEVEL=2"
 DISTRIBUTED_ARGS="${OPTIONS_NCCL} deepspeed --master_port $MASTER_PORT --num_nodes ${NUM_WORKERS} --num_gpus ${NUM_GPUS_PER_WORKER}"
 
 EXPERIMENT_NAME=${EXPERIMENT_NAME}_${DATESTR}
