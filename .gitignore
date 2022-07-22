@@ -6,7 +6,8 @@ logs
 runs
 settings.json
 .gitignore
-.vscode/
+.vscode/*
 data/
 apex/
 data.*
+!.vscode/launch.json

@@ -21,6 +21,9 @@ import torch
 import deepspeed
 import json
 from utils import get_hostname
+from tsc.ab_配置生成器 import Models, Tasks, Scripts, split_py_args
+import sys
+import re
 
 
 def add_model_config_args(parser):
@@ -397,7 +400,11 @@ def add_finetune_config_args(parser):
 def add_custom_args(parser: argparse.ArgumentParser):
     import subprocess
     group = parser.add_argument_group('custom', 'custom configurations')
-    group.add_argument('--spare_port', type=int, help='固定来自 utils.spare_port 的端口, 防止每次随机冲突', default=int(subprocess.check_output(["shuf -n 1 -i 10000-65535"], shell=True)))
+    group.add_argument('--spare_port', type=int, help='固定来自 utils.spare_port 的端口, 防止每次随机容易冲突', default=int(subprocess.check_output(["shuf -n 1 -i 10000-65535"], shell=True)))
+    # 用于调试
+    group.add_argument('--custom_model', type=str, help='配置生成器中的模型', default=None)
+    group.add_argument('--custom_task', type=str, help='配置生成器中的任务', default=None)
+    group.add_argument('--custom_script', type=str, help='配置生成器中的脚本', default=None)
     return parser
 
 
@@ -418,6 +425,13 @@ def get_args():
     parser = deepspeed.add_config_arguments(parser)
 
     args = parser.parse_args()
+    # 尝试使用调试的参数
+    if args.custom_model:
+        model = getattr(Models, args.custom_model)
+        task = getattr(Tasks, args.custom_task)
+        script = getattr(Scripts, args.custom_script)
+        args = parser.parse_args(sys.argv[1:] + split_py_args(script(model, task)))
+
     if not args.train_data and not args.data_dir:
         print('WARNING: No training data specified')
 
