@@ -130,7 +130,7 @@ def get_model(args, model_type=None, multi_token=True, num_labels=None, spell_le
     if mpu.get_data_parallel_rank() == 0:
         print(' > number of parameters on model parallel rank {}: {}'.format(
             mpu.get_model_parallel_rank(),
-            sum([p.nelement() for p in model.parameters()])), flush=True)
+            sum([p.nelement() for p in model.parameters()])), flush=True)  # 统计参数总量
 
     # To prevent OOM for model sizes that cannot fit in GPU memory in full precision
     if args.fp16:

@@ -125,7 +125,11 @@ def finetune_forward_step(batch, model, args, timers, mems):
         model_type = str(type(model)).split("'")[1]
         model_img_path = f'{args.save}/{model_type}-logits'
         if not os.path.exists(model_img_path + '.pdf'):
-            g = make_dot(logits, params=dict(model.named_parameters()), show_attrs=True, show_saved=True)
+            model_ = model
+            from train_utils import LocalDDP, TorchDDP, FP16_Module
+            while isinstance(model_, (LocalDDP, TorchDDP, FP16_Module)):
+                model_ = model_.module
+            g = make_dot(logits, params=dict(model_.named_parameters()), show_attrs=True, show_saved=True)
             g.render(filename=model_img_path, cleanup=True, format='pdf')
     except:
         traceback.print_exc()
@@ -300,7 +304,7 @@ def finetune(args, train_valid_datasets_provider, model_kwargs, forward_step=fin
     if args.save:
         args.save = os.path.join(args.save, args.experiment_name)
     # Train and validation data loaders.
-    timers('train/valid/test dataset/dataloder').start()
+    timers('train/valid/test dataset/dataloder').start()  # 等待CUDA设备上所有流中的所有内核完成。
     train_dataloader, valid_dataloader = None, None
     train_block_dataloader, valid_block_dataloader = None, None
     if train_valid_datasets_provider is not None and args.epochs > 0:

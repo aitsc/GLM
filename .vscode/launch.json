@@ -6,7 +6,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "cwd": "${fileDirname}"
         },
         {
             "name": "torch.distributed.launch",
@@ -21,6 +21,19 @@
                 "--master_addr=localhost",
                 "--master_port=12367",
                 "finetune_glm.py",
+                "--custom_model=model_blocklm_base",
+                "--custom_task=task_copa",
+                "--custom_script=finetune_superglue",
+            ],
+            "env": {"CUDA_VISIBLE_DEVICES":"0"},
+        },
+        {
+            "name": "单机",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
                 "--custom_model=model_blocklm_base",
                 "--custom_task=task_copa",
                 "--custom_script=finetune_superglue",
