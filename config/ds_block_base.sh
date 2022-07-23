@@ -14,7 +14,7 @@ gpt_options=" \
        --num-attention-heads 12 \
        --seq-length 512 \
        --max-position-embeddings 512 \
-       --save /root/data/checkpoints \
+       --save data/checkpoints2 \
        --train-iters 150000 \
        --resume-dataloader \
        --train-data bert-base \

@@ -17,6 +17,38 @@ class Models:
         ]
         return env
 
+class Models_ds:
+    @staticmethod
+    def block_base(env: dict):
+        env['gpt_options'] = [
+            '--block-lm', 
+            '--bert-prob 1.0', 
+            '--experiment-name blocklm-blank', 
+            '--model-parallel-size ' + env['MP_SIZE'],
+            '--num-layers 12', 
+            '--hidden-size 768',
+            '--num-attention-heads 12',
+            '--seq-length 512',
+            '--max-position-embeddings 512', 
+            '--save data/checkpoints2',
+            '--train-iters 150000',
+            '--resume-dataloader',
+            '--train-data bert-base',
+            # '--lazy-loader',  # 会引起报错
+            '--no-lazy-loader',  # 不使用懒惰加载
+            '--tokenizer-type BertWordPieceTokenizer', 
+            '--tokenizer-model-type bert-base-uncased', 
+            '--split 949,50,1',
+            '--distributed-backend nccl',
+            '--lr-decay-style cosine',
+            '--lr-decay-iters 120000',
+            '--lr-decay-ratio 0.05',
+            '--warmup .05',
+            '--checkpoint-activations',
+            '--fp16',
+        ]
+        return env
+
 class Tasks:
     EPOCH_SINGLE = '10000'  # 训练多少 epoch
 
@@ -74,7 +106,7 @@ class Tasks:
 
 class Scripts:
     @staticmethod
-    def finetune_superglue(model_f, task_f, env={}):
+    def finetune_superglue(model_f, task_f, env={}, **kw):
         env['DATA_ROOT'] = 'data/english_data/superglue'  # 数据位置
         env['CHECKPOINT_PATH'] = 'data/checkpoints'  # 模型位置
         model_f(env)
@@ -102,6 +134,27 @@ class Scripts:
             '--epochs ' + env['EPOCH_SINGLE'],
             '--lr ' + env['LR_SINGLE'],
             '--overwrite',
+        ]
+        return py_args
+
+    @staticmethod
+    def ds_pretrain_nvidia(model_ds_f, env={}, **kw):
+        env['MP_SIZE'] = '1'
+        model_ds_f(env)
+        py_args = [
+            *env['gpt_options'],
+            '--deepspeed-activation-checkpointing',
+            '--deepspeed',
+            '--deepspeed_config config/config_block_base.json',
+        ]
+        return py_args
+
+    @staticmethod
+    def pretrain_nvidia(model_ds_f, env={}, **kw):
+        env['MP_SIZE'] = '1'
+        model_ds_f(env)
+        py_args = [
+            *env['gpt_options'],
         ]
         return py_args
 

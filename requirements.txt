@@ -1,6 +1,6 @@
 botocore
 boto3
-deepspeed
+deepspeed==0.6.5
 filelock
 scipy
 nltk

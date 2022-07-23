@@ -39,6 +39,39 @@
                 "--custom_script=finetune_superglue",
             ],
             "env": {"CUDA_VISIBLE_DEVICES":"0"},
-        }
+        },
+        {
+            "name": "deepspeed",
+            "type": "python",
+            "request": "launch",
+            "program": "./tsc/ad_deepspeed.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--master_port=12367",
+                "--num_nodes=1",
+                "--num_gpus=1",
+                "--hostfile=",
+                "pretrain_glm.py",
+                "--custom_model_ds=block_base",
+                "--custom_script=ds_pretrain_nvidia",
+            ],
+            "env": {
+                "NCCL_DEBUG":"info",
+                "NCCL_IB_DISABLE":"0",
+                "NCCL_NET_GDR_LEVEL":"2",
+            },
+        },
+        {
+            "name": "pretrain_glm",
+            "type": "python",
+            "request": "launch",
+            "program": "pretrain_glm.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--custom_model_ds=block_base",
+                "--custom_script=pretrain_nvidia",
+            ],
+            "env": {"CUDA_VISIBLE_DEVICES":"0"},
+        },
     ]
 }

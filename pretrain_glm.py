@@ -481,23 +481,38 @@ def initialize_distributed(args):
     if args.local_rank is not None:
         device = args.local_rank
     torch.cuda.set_device(device)
-    # Call the init process
-    init_method = 'tcp://'
-    args.master_ip = os.getenv('MASTER_ADDR', 'localhost')
-    args.master_port = os.getenv('MASTER_PORT', '6000')
-    init_method += args.master_ip + ':' + args.master_port
-    torch.distributed.init_process_group(
-        backend=args.distributed_backend,
-        world_size=args.world_size, rank=args.rank,
-        init_method=init_method)
 
-    # Set the model-parallel / data-parallel communicators.
-    mpu.initialize_model_parallel(args.model_parallel_size)
+    if [int(i) for i in deepspeed.__version__.split('.')] < [0, 6, 6]:
+        # Call the init process
+        init_method = 'tcp://'
+        args.master_ip = os.getenv('MASTER_ADDR', 'localhost')
+        args.master_port = os.getenv('MASTER_PORT', '6000')
+        init_method += args.master_ip + ':' + args.master_port
+        torch.distributed.init_process_group(
+            backend=args.distributed_backend,
+            world_size=args.world_size, rank=args.rank,
+            init_method=init_method)
 
-    # Optional DeepSpeed Activation Checkpointing Features
-    #
-    if hasattr(args, "deepspeed") and args.deepspeed and args.deepspeed_activation_checkpointing:
-        set_deepspeed_activation_checkpointing(args)
+        # Set the model-parallel / data-parallel communicators.
+        mpu.initialize_model_parallel(args.model_parallel_size)
+
+        # Optional DeepSpeed Activation Checkpointing Features
+        #
+        if hasattr(args, "deepspeed") and args.deepspeed and args.deepspeed_activation_checkpointing:
+            set_deepspeed_activation_checkpointing(args)
+    else:
+        if hasattr(args, "deepspeed") and args.deepspeed and args.deepspeed_activation_checkpointing:
+            deepspeed.init_distributed()  # deepspeed>=0.6.6
+            set_deepspeed_activation_checkpointing(args)
+        else:
+            init_method = 'tcp://'
+            args.master_ip = os.getenv('MASTER_ADDR', 'localhost')
+            args.master_port = os.getenv('MASTER_PORT', '6000')
+            init_method += args.master_ip + ':' + args.master_port
+            torch.distributed.init_process_group(
+                backend=args.distributed_backend,
+                world_size=args.world_size, rank=args.rank,
+                init_method=init_method)
 
 
 def set_random_seed(seed):
