@@ -40,6 +40,7 @@
             ],
             "env": {"CUDA_VISIBLE_DEVICES":"0"},
         },
+        // 常调参数 → data_utils/corpora.py
         {
             "name": "deepspeed",
             "type": "python",
@@ -49,11 +50,11 @@
             "args": [
                 "--master_port=12367",
                 "--num_nodes=1",
-                "--num_gpus=1",
+                "--num_gpus=1", // 常调参数
                 "--hostfile=",
                 "pretrain_glm.py",
-                "--custom_model_ds=block_base",
-                "--custom_script=ds_pretrain_nvidia",
+                "--custom_model_ds=block_base", // 常调参数 → 配置生成器
+                "--custom_script=ds_pretrain_nvidia", // 常调参数 → 配置生成器
             ],
             "env": {
                 "NCCL_DEBUG":"info",
@@ -68,10 +69,10 @@
             "program": "pretrain_glm.py",
             "console": "integratedTerminal",
             "args": [
-                "--custom_model_ds=block_base",
-                "--custom_script=pretrain_nvidia",
+                "--custom_model_ds=block_base", // 常调参数 → 配置生成器
+                "--custom_script=pretrain_nvidia", // 常调参数 → 配置生成器
             ],
-            "env": {"CUDA_VISIBLE_DEVICES":"0"},
+            "env": {"CUDA_VISIBLE_DEVICES":"6"},
         },
     ]
 }

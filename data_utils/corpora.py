@@ -482,6 +482,7 @@ class Stories(PromptReader):
 
 class BertBaseData(BertData):
     PATH = '/root/data/formatted_one_article_per_line'
+    PATH = 'data/pretrain/bertbase/books1.txt'
 
 
 class BertLargeData(BertData):

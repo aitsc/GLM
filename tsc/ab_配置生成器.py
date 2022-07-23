@@ -30,7 +30,7 @@ class Models_ds:
             '--num-attention-heads 12',
             '--seq-length 512',
             '--max-position-embeddings 512', 
-            '--save data/checkpoints2',
+            '--save data/checkpoints_pretrain',  # 模型保存位置
             '--train-iters 150000',
             '--resume-dataloader',
             '--train-data bert-base',
@@ -139,7 +139,7 @@ class Scripts:
 
     @staticmethod
     def ds_pretrain_nvidia(model_ds_f, env={}, **kw):
-        env['MP_SIZE'] = '1'
+        env['MP_SIZE'] = '1'  # 模型并行数, 常调参数
         model_ds_f(env)
         py_args = [
             *env['gpt_options'],

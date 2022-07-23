@@ -42,6 +42,8 @@ from utils import print_and_save_args
 from utils import print_rank_0
 from utils import get_sample_writer, get_log_dir, get_hostname
 import torch.distributed as dist
+from torchviz import make_dot
+import traceback
 
 
 def get_masks_and_position_ids(data,
@@ -260,6 +262,21 @@ def forward_step(data_iterator, model, args, timers, mems):
         mode = 'bert'
 
     logits, *mems = model(tokens, position_ids, attention_mask, *mems)
+    # 输出模型图
+    try:
+        model_type = str(type(model)).split("'")[1]
+        model_img_path = f'{args.save}/{model_type}-logits'
+        if not os.path.exists(model_img_path + '.pdf'):
+            model_ = model
+            from train_utils import LocalDDP, TorchDDP, FP16_Module
+            while isinstance(model_, (LocalDDP, TorchDDP, FP16_Module)):
+                model_ = model_.module
+            g = make_dot(logits, params=dict(model_.named_parameters()), show_attrs=True, show_saved=True)
+            g.render(filename=model_img_path, cleanup=True, format='pdf')
+    except:
+        traceback.print_exc()
+        print('make_dot 模型图绘制失败 (常见原因是linux没安装相关graphviz包)')
+
     losses = mpu.vocab_parallel_cross_entropy(logits.contiguous().float(),
                                               labels)
     loss_mask = loss_mask.view(-1)
