@@ -11,3 +11,4 @@ data/
 apex/
 data.*
 !.vscode/launch.json
+test*

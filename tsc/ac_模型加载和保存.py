@@ -19,10 +19,13 @@ from filelock import FileLock
 import pathlib
 from configure_data import prepare_tokenizer
 import pretrain_glm
+from torchviz import make_dot
+import traceback
+from pretrain_glm import set_random_seed
 
 
 def get_model(args, model_type=None, multi_token=True, num_labels=None, spell_length=None):
-    """Build the model."""
+    """参考 train_utils.py 中的 get_model()"""
     print_rank_0('building GPT2 model ...')
     if args.pretrained_bert:
         if model_type == "multiple_choice":
@@ -97,6 +100,7 @@ def get_model(args, model_type=None, multi_token=True, num_labels=None, spell_le
     return model
 
 def load_pretrained(model, checkpoint_path, args, task_tokens=None):
+    """参考 train_utils.py 中的 load_pretrained()"""
     load_dir, tag, release, success = get_checkpoint_iteration(checkpoint_path)
     checkpoint_name = get_checkpoint_name(load_dir, tag, release)
     if mpu.get_data_parallel_rank() == 0:
@@ -160,11 +164,7 @@ def main():
     # 初始化 mpu
     mpu.initialize_model_parallel(args.model_parallel_size)
     # 初始化种子
-    seed = args.seed
-    if seed is not None and seed > 0:
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
+    set_random_seed(args.seed)
     
     # 获取不同需求的模型初始化参数
     superglue_tasks = list(PROCESSORS.keys())
@@ -200,6 +200,38 @@ def main():
     # 加载模型参数
     with FileLock(os.path.join(pathlib.Path.home(), "checkpoint_lock"), timeout=-1):
         load_pretrained(model, args.load_pretrained, args)
+    # 保存模型参数, 参考 utils.py 中的 save_checkpoint()
+    sd = {}
+    checkpoint_name = 'tsc/test_model.pt'
+    state_dict = model.state_dict()
+    sd['module'] = state_dict
+    torch.save(sd, checkpoint_name)
+    torch.distributed.barrier()  # 不同进程之间的数据同步
+    print('  successfully saved {}'.format(checkpoint_name))
+    # 模型展示
+    if args.task.lower() in superglue_tasks:
+        # 构建模型需要的模拟参数
+        minputs = [
+            {'name': 'token', 'size': [16, 2, 256]},  # 2 代表两个标签的数据
+            {'name': 'position_ids', 'size': [16, 2, 2, 256]},
+            {'name': 'attention_mask', 'size': [16, 2]},
+            {'name': 'target_ids', 'size': [16, 2, 256]},  # 每个序列的真实输出id
+            {'name': 'logit_mask', 'size': [16, 2, 256]},  # 对只需要的输出微调
+        ]
+        for i in minputs:
+            i['v'] = torch.full(i['size'], 1, dtype=torch.int64).to(torch.cuda.current_device())
+        data = tuple(i['v'] for i in minputs)
+        # 输出模型图
+        result = model(*data)
+        model_img_path = 'tsc/test_model'
+        g = make_dot(result, params=dict(model.named_parameters()), show_attrs=True, show_saved=True)
+        g.render(filename=model_img_path, cleanup=True, format='pdf')
+        try:
+            script_model = torch.jit.trace(model, data, check_trace=False)  # 并行化 check_trace=True 报错
+            script_model.save("tsc/test_model_trace.pt")
+        except:
+            traceback.print_exc()
+            print('不支持mpu并行化')
 
 
 if __name__ == '__main__':

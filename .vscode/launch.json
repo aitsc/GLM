@@ -28,10 +28,10 @@
             "env": {"CUDA_VISIBLE_DEVICES":"0"},
         },
         {
-            "name": "单机",
+            "name": "单机测试",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "${file}", // 例如运行 tsc/ac_模型加载和保存.py
             "console": "integratedTerminal",
             "args": [
                 "--custom_model=model_blocklm_base",
