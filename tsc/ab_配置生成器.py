@@ -3,8 +3,9 @@ import re
 
 class Models:
     @staticmethod
-    def model_blocklm_base(env: dict):
+    def model_blocklm_base(env: dict, **kw):
         env['MODEL_TYPE'] = "blank-base"
+        env['MODEL_PATH'] = "data/checkpoints/pretrain/blocklm-base-blank"  # 模型位置
         env['MODEL_ARGS'] = [
             '--block-lm', 
             '--num-layers 12', 
@@ -13,29 +14,27 @@ class Models:
             '--max-position-embeddings 512', 
             '--tokenizer-model-type bert-base-uncased', 
             '--tokenizer-type BertWordPieceTokenizer', 
-            f'--load-pretrained {env["CHECKPOINT_PATH"]}/blocklm-base-blank',
+            '--load-pretrained ' + env['MODEL_PATH'],
+            # '--fp16',
         ]
         return env
 
-class Models_ds:
+class Models_pre:
     @staticmethod
-    def block_base(env: dict):
+    def block_base(env: dict, **kw):
         env['gpt_options'] = [
             '--block-lm', 
             '--bert-prob 1.0', 
             '--experiment-name blocklm-blank', 
-            '--model-parallel-size ' + env['MP_SIZE'],
             '--num-layers 12', 
             '--hidden-size 768',
             '--num-attention-heads 12',
             '--seq-length 512',
             '--max-position-embeddings 512', 
-            '--save data/checkpoints_pretrain',  # 模型保存位置
-            '--train-iters 150000',
+            '--save data/checkpoints/pretrain/block_base',  # 模型保存位置
             '--resume-dataloader',
             '--train-data bert-base',
-            # '--lazy-loader',  # 会引起报错
-            '--no-lazy-loader',  # 不使用懒惰加载
+            '--no-lazy-loader',
             '--tokenizer-type BertWordPieceTokenizer', 
             '--tokenizer-model-type bert-base-uncased', 
             '--split 949,50,1',
@@ -44,16 +43,16 @@ class Models_ds:
             '--lr-decay-iters 120000',
             '--lr-decay-ratio 0.05',
             '--warmup .05',
-            '--checkpoint-activations',
-            '--fp16',
+            # '--fp16',
         ]
+        env['deepspeed_config'] = 'config/config_block_base.json'  # 包含 batch-size
         return env
 
 class Tasks:
     EPOCH_SINGLE = '10000'  # 训练多少 epoch
 
     @staticmethod
-    def task_copa(env: dict):
+    def task_copa(env: dict, **kw):
         env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-copa'
         env['TASK_NAME'] = 'COPA'
         env['DATA_PATH'] = f'{env["DATA_ROOT"]}/COPA'
@@ -79,7 +78,7 @@ class Tasks:
         return env
 
     @staticmethod
-    def task_rte(env: dict):
+    def task_rte(env: dict, **kw):
         env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-rte'
         env['TASK_NAME'] = 'RTE'
         env['DATA_PATH'] = f'{env["DATA_ROOT"]}/RTE'
@@ -107,12 +106,11 @@ class Tasks:
 class Scripts:
     @staticmethod
     def finetune_superglue(model_f, task_f, env={}, **kw):
-        env['DATA_ROOT'] = 'data/english_data/superglue'  # 数据位置
-        env['CHECKPOINT_PATH'] = 'data/checkpoints'  # 模型位置
+        env['DATA_ROOT'] = 'data/english_data/superglue'  # 总数据位置
         model_f(env)
         task_f(env)
-        env['SAVE_PATH'] = 'data/finetune_checkpoints/' + env['TASK_NAME']
-        env['N_GPU'] = '1'
+        env['SAVE_PATH'] = env['MODEL_PATH'] + '/finetune/' + env['TASK_NAME']
+        env['N_GPU'] = '1'  # BATCH_SIZE 均分到几张卡上
         env['PER_GPU_BS'] = str(int(int(env['BATCH_SIZE']) / int(env['N_GPU'])))
         env['EXPERIMENT_NAME'] = env['EXPERIMENT_NAME'] + '-' + datetime.now().strftime('%m-%d-%H-%M')
         py_args = [
@@ -129,7 +127,6 @@ class Scripts:
             *env['MODEL_ARGS'],
             *env['TRAIN_ARGS'],
             *env['COMMON_ARGS'],
-            '--fp16',
             '--batch-size ' + env['PER_GPU_BS'],
             '--epochs ' + env['EPOCH_SINGLE'],
             '--lr ' + env['LR_SINGLE'],
@@ -138,28 +135,24 @@ class Scripts:
         return py_args
 
     @staticmethod
-    def ds_pretrain_nvidia(model_ds_f, env={}, **kw):
-        env['MP_SIZE'] = '1'  # 模型并行数, 常调参数
-        model_ds_f(env)
+    def pretrain_nvidia(model_pre_f, ds=True, env={}, **kw):
+        model_pre_f(env)
         py_args = [
             *env['gpt_options'],
-            '--deepspeed-activation-checkpointing',
-            '--deepspeed',
-            '--deepspeed_config config/config_block_base.json',
+            '--checkpoint-activations',
+            '--train-iters 1500000',  # 迭代几次
+            '--model-parallel-size 1',  # 模型并行数, 常调参数
         ]
-        return py_args
-
-    @staticmethod
-    def pretrain_nvidia(model_ds_f, env={}, **kw):
-        env['MP_SIZE'] = '1'
-        model_ds_f(env)
-        py_args = [
-            *env['gpt_options'],
-        ]
+        if ds:
+            py_args += [
+                '--deepspeed-activation-checkpointing',
+                '--deepspeed',
+                '--deepspeed_config ' + env['deepspeed_config'],
+            ]
         return py_args
 
 
-def split_py_args(py_args: list):
+def split_py_args(py_args: list):  # 空格切分成一节节, 除了等号, 路径不能有空格?
     args = []
     for py_arg in py_args:
         py_arg = py_arg.strip()
@@ -170,6 +163,41 @@ def split_py_args(py_args: list):
     return args
 
 
+def create_cmd(script, model=None, model_pre=None, task=None, ds=False):  # 生成可执行命令
+    py_args = split_py_args(script(model_f=model, task_f=task, model_pre_f=model_pre, ds=ds))
+    if ds:
+        prefix = [
+            'NCCL_DEBUG=info',
+            'NCCL_IB_DISABLE=0',
+            'NCCL_NET_GDR_LEVEL=2',
+            'deepspeed',
+            '--master_port=12367',
+            '--num_nodes=1',
+            '--num_gpus=4',
+            '--hostfile=',
+        ]
+    else:
+        prefix = [
+            'CUDA_VISIBLE_DEVICES=6',
+            'python',
+            '-u',
+        ]
+    py = f"{script.__name__.split('_')[0]}_glm.py"
+    cmd = ' '.join(prefix + [py] + py_args)
+    return cmd
+
+
 if __name__ == '__main__':
-    py_args = Scripts.finetune_superglue(Models.model_blocklm_base, Tasks.task_copa)
-    print(split_py_args(py_args))
+    model = model_pre = task = None
+    print()
+    script = Scripts.finetune_superglue
+    model = Models.model_blocklm_base
+    task = Tasks.task_copa
+    deepspeed = False
+    print(create_cmd(script, model, model_pre, task, deepspeed))
+    print()
+    script = Scripts.pretrain_nvidia
+    model_pre = Models_pre.block_base
+    deepspeed = True
+    print(create_cmd(script, model, model_pre, task, deepspeed))
+    print()

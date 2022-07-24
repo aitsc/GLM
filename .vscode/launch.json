@@ -41,8 +41,14 @@
                 "--hostfile=",
                 // 预训练
                 "pretrain_glm.py",
-                "--custom_model_ds=block_base",
-                "--custom_script=ds_pretrain_nvidia",
+                "--custom_model_pre=block_base",
+                "--custom_script=pretrain_nvidia",
+                // 微调
+                // "finetune_glm.py",
+                // "--custom_model=model_blocklm_base",
+                // "--custom_task=task_copa",
+                // "--custom_script=finetune_superglue",
+                "--deepspeed",
             ],
             "env": {
                 "NCCL_DEBUG":"info",
@@ -54,16 +60,16 @@
             "name": "单机单卡",
             "type": "python",
             "request": "launch",
-            "program": "${file}", // 例如运行 finetune_glm.py pretrain_glm.py tsc/ac_模型加载和保存.py 等等
+            "program": "finetune_glm.py", // finetune_glm pretrain_glm tsc/ac_模型加载和保存
             "console": "integratedTerminal",
             "args": [
                 // 微调
-                // "--custom_model=model_blocklm_base",
-                // "--custom_task=task_copa",
-                // "--custom_script=finetune_superglue",
+                "--custom_model=model_blocklm_base",
+                "--custom_task=task_copa",
+                "--custom_script=finetune_superglue",
                 // 预训练
-                "--custom_model_ds=block_base",
-                "--custom_script=pretrain_nvidia",
+                // "--custom_model_pre=block_base",
+                // "--custom_script=pretrain_nvidia",
             ],
             "env": {"CUDA_VISIBLE_DEVICES":"6"},
         },

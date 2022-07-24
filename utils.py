@@ -26,6 +26,8 @@ import subprocess
 from fp16 import FP16_Optimizer
 import mpu
 from tensorboardX import SummaryWriter
+import json
+import collections
 
 SUMMARY_WRITER_DIR_NAME = 'runs'
 
@@ -276,6 +278,9 @@ def save_checkpoint(iteration, model, optimizer, lr_scheduler, args, tag=None, b
         tracker_filename = get_checkpoint_tracker_filename(args.save)
         with open(tracker_filename, 'w') as f:
             f.write(tag)
+    # 保存参数
+    with open(os.path.join(args.save, 'args.txt'), 'w') as f:
+        json.dump(collections.OrderedDict(vars(args)), f, indent=2, ensure_ascii=False)
 
 
 def save_ds_checkpoint(iteration, model, lr_scheduler, args, tag):
