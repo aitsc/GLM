@@ -36,8 +36,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--master_port=12367",
-                "--num_nodes=1",
-                "--num_gpus=1", // 常调参数
+                "--include=localhost:6", // 常调参数
                 "--hostfile=",
                 // 预训练
                 "pretrain_glm.py",

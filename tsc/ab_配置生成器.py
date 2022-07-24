@@ -172,8 +172,7 @@ def create_cmd(script, model=None, model_pre=None, task=None, ds=False):  # ç”Ÿæ
             'NCCL_NET_GDR_LEVEL=2',
             'deepspeed',
             '--master_port=12367',
-            '--num_nodes=1',
-            '--num_gpus=4',
+            "--include=localhost:0,1,2,3",
             '--hostfile=',
         ]
     else:
