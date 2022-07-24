@@ -6,55 +6,43 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "cwd": "${fileDirname}"
+            // "cwd": "${fileDirname}"
         },
         {
-            "name": "torch.distributed.launch",
+            "name": "torch.distributed",
             "type": "python",
             "request": "launch",
             "program": "~/anaconda3/envs/GLM/lib/python3.8/site-packages/torch/distributed/launch.py",
             "console": "integratedTerminal",
             "args": [
-                "--nproc_per_node=1",
+                "--nproc_per_node=1", // 常调参数
                 "--nnodes=1",
                 "--node_rank=0",
                 "--master_addr=localhost",
                 "--master_port=12367",
+                // 微调
                 "finetune_glm.py",
                 "--custom_model=model_blocklm_base",
                 "--custom_task=task_copa",
                 "--custom_script=finetune_superglue",
             ],
-            "env": {"CUDA_VISIBLE_DEVICES":"0"},
+            "env": {"CUDA_VISIBLE_DEVICES":"6"},
         },
-        {
-            "name": "单机测试",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}", // 例如运行 tsc/ac_模型加载和保存.py
-            "console": "integratedTerminal",
-            "args": [
-                "--custom_model=model_blocklm_base",
-                "--custom_task=task_copa",
-                "--custom_script=finetune_superglue",
-            ],
-            "env": {"CUDA_VISIBLE_DEVICES":"0"},
-        },
-        // 常调参数 → data_utils/corpora.py
         {
             "name": "deepspeed",
             "type": "python",
             "request": "launch",
-            "program": "./tsc/ad_deepspeed.py",
+            "program": "~/anaconda3/envs/GLM/bin/deepspeed",
             "console": "integratedTerminal",
             "args": [
                 "--master_port=12367",
                 "--num_nodes=1",
                 "--num_gpus=1", // 常调参数
                 "--hostfile=",
+                // 预训练
                 "pretrain_glm.py",
-                "--custom_model_ds=block_base", // 常调参数 → 配置生成器
-                "--custom_script=ds_pretrain_nvidia", // 常调参数 → 配置生成器
+                "--custom_model_ds=block_base",
+                "--custom_script=ds_pretrain_nvidia",
             ],
             "env": {
                 "NCCL_DEBUG":"info",
@@ -63,14 +51,19 @@
             },
         },
         {
-            "name": "pretrain_glm",
+            "name": "单机单卡",
             "type": "python",
             "request": "launch",
-            "program": "pretrain_glm.py",
+            "program": "${file}", // 例如运行 finetune_glm.py pretrain_glm.py tsc/ac_模型加载和保存.py 等等
             "console": "integratedTerminal",
             "args": [
-                "--custom_model_ds=block_base", // 常调参数 → 配置生成器
-                "--custom_script=pretrain_nvidia", // 常调参数 → 配置生成器
+                // 微调
+                // "--custom_model=model_blocklm_base",
+                // "--custom_task=task_copa",
+                // "--custom_script=finetune_superglue",
+                // 预训练
+                "--custom_model_ds=block_base",
+                "--custom_script=pretrain_nvidia",
             ],
             "env": {"CUDA_VISIBLE_DEVICES":"6"},
         },

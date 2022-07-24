@@ -15,7 +15,7 @@ gpt_options=" \
        --seq-length 512 \
        --max-position-embeddings 512 \
        --save data/checkpoints_pretrain \
-       --train-iters 150000 \
+       --train-iters 1500000 \
        --resume-dataloader \
        --train-data bert-base \
        --no-lazy-loader \

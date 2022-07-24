@@ -1,5 +1,5 @@
 DATA_ROOT=data/english_data/superglue
-CHECKPOINT_PATH=data/checkpoints
+CHECKPOINT_PATH=data/checkpoints_pretrain
 DATESTR=$(date +"%m-%d-%H-%M")
 
 source $1    # Model
@@ -8,7 +8,7 @@ source $2    # Task
 SAVE_PATH=data/finetune_checkpoints/${TASK_NAME}
 
 NUM_WORKERS=1
-NUM_GPUS_PER_WORKER=1
+NUM_GPUS_PER_WORKER=4
 MP_SIZE=1
 MASTER_PORT=$(shuf -n 1 -i 10000-65535)
 

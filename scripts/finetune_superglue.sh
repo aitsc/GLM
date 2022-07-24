@@ -1,5 +1,5 @@
 DATA_ROOT=data/english_data/superglue
-CHECKPOINT_PATH=data/checkpoints
+CHECKPOINT_PATH=data/checkpoints_pretrain
 
 source $1    # Model
 source $2    # Task
