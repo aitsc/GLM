@@ -131,6 +131,7 @@ class Scripts:
             '--epochs ' + env['EPOCH_SINGLE'],
             '--lr ' + env['LR_SINGLE'],
             '--overwrite',
+            '--fp32-allreduce',
         ]
         return py_args
 
@@ -142,6 +143,7 @@ class Scripts:
             '--checkpoint-activations',
             '--train-iters 1500000',  # 迭代几次
             '--model-parallel-size 1',  # 模型并行数, 常调参数
+            '--fp32-allreduce',
         ]
         if ds:
             py_args += [
@@ -152,7 +154,7 @@ class Scripts:
         return py_args
 
 
-def split_py_args(py_args: list):  # 空格切分成一节节, 除了等号, 路径不能有空格?
+def split_py_args(py_args: list):  # 空格/等号切分成一节节, 路径不能有空格?
     args = []
     for py_arg in py_args:
         py_arg = py_arg.strip()
