@@ -598,7 +598,7 @@ class BlockDataset(data.Dataset):
             lens = np.array([self.ds.get_text_len(idx) for idx in range(len(self.ds))])
         else:
             lens = np.array([len(d['text']) if isinstance(d, dict) else len(d) for d in self.ds])
-        self.total_len = np.sum(lens)
+        self.total_len = np.sum(lens)  # token 总数
         print_rank_0(
             f"Dataset document count {len(lens)}, token count {self.total_len}, non sentence start{self.non_sentence_start}")
         self.weighting = list(accumulate(lens))
@@ -626,22 +626,22 @@ class BlockDataset(data.Dataset):
         rng = np.random.RandomState(seed=[rng.randint(0, 2 ** 32 - 1) for _ in range(16)])
 
         # get possibly weighted random index from dataset
-        tokens, loss_mask = self.get_weighted_samples(rng)
+        tokens, loss_mask = self.get_weighted_samples(rng)  # [..,eos], [..,1]
         # truncate or pad tokens
         num_tokens = len(tokens)
         tokens_to_strip = num_tokens - self.max_seq_len + 1
 
-        # randomly choose a position for start
+        # randomly choose a position for start, 至少保证后面还有512字符(包括eos)
         if tokens_to_strip > 0:
             move_count = 0
             strip_left_tokens = rng.randint(tokens_to_strip)
-            if rng.random() > self.non_sentence_start:
+            if rng.random() > self.non_sentence_start:  # 尽量保证整句
                 if rng.random() < 0.5:
                     while move_count < self.max_seq_len // 2 and strip_left_tokens > 0 and not self.contains_sentence_end(
                             tokens[strip_left_tokens - 1]):
-                        strip_left_tokens -= 1
-                        move_count += 1
-                else:
+                        strip_left_tokens -= 1  # 如果截断位置的前一个token不是整句结束就前移一个token
+                        move_count += 1  # 如果前移的token超过总长度的一半就不管整句了
+                else:  # 和上面类似，有一半概率向后移动一个token
                     while move_count < self.max_seq_len // 2 and strip_left_tokens < len(
                             tokens) and not self.contains_sentence_end(tokens[strip_left_tokens - 1]):
                         strip_left_tokens += 1
@@ -649,8 +649,9 @@ class BlockDataset(data.Dataset):
             tokens = [self.tokenizer.get_command('ENC').Id] + tokens[strip_left_tokens:]
             loss_mask = [0] + loss_mask[strip_left_tokens:]
             if len(tokens) == 2 and tokens[1] == self.tokenizer.get_command('eos').Id:
-                tokens, loss_mask = [], []
+                tokens, loss_mask = [], []  # 一个有效token都没有就清空
             tokens, loss_mask = self.right_strip_seq(tokens, loss_mask, self.max_seq_len)
+            # 可能的 tokens: []/[ENC,'',eos]/[ENC,..,eos]/[ENC,..,'']
         else:
             tokens = [self.tokenizer.get_command('ENC').Id] + tokens
             loss_mask = [0] + loss_mask
@@ -667,15 +668,16 @@ class BlockDataset(data.Dataset):
                     loss_mask += new_loss_mask
                     if is_last:
                         break
+            # 可能的 tokens: [ENC,eos]/..
         return {'text': np.array(tokens), "loss_mask": np.array(loss_mask)}
 
     def right_strip_seq(self, tokens, loss_mask, seq_length):
         strip_right_tokens = len(tokens) - seq_length
         if strip_right_tokens > 0:
             while strip_right_tokens < len(tokens) - 1 and not self.contains_sentence_end(
-                    tokens[-strip_right_tokens - 1]):
+                    tokens[-strip_right_tokens - 1]):  # 截取整句
                 strip_right_tokens += 1
-            if len(tokens) - strip_right_tokens < seq_length // 2:
+            if len(tokens) - strip_right_tokens < seq_length // 2:  # 如果为了整句导致填不满剩下长度的一半就不管整句了
                 strip_right_tokens = len(tokens) - seq_length
             tokens = tokens[:-strip_right_tokens]
             loss_mask = loss_mask[:-strip_right_tokens]

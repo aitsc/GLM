@@ -6,6 +6,7 @@ class Models:
     def model_blocklm_base(env: dict, **kw):
         env['MODEL_TYPE'] = "blank-base"
         env['MODEL_PATH'] = "data/checkpoints/pretrain/blocklm-base-blank"  # 模型位置
+        env['MODEL_PATH'] = "data/checkpoints/pretrain/block_base/blocklm-blank07-24-09-23"  # 模型位置
         env['MODEL_ARGS'] = [
             '--block-lm', 
             '--num-layers 12', 
@@ -43,9 +44,9 @@ class Models_pre:
             '--lr-decay-iters 120000',
             '--lr-decay-ratio 0.05',
             '--warmup .05',
-            # '--fp16',
+            # '--fp16',  # 用 ds 还需要设置 deepspeed_config 中的 fp16
         ]
-        env['deepspeed_config'] = 'config/config_block_base.json'  # 包含 batch-size
+        env['deepspeed_config'] = 'config/config_block_base.json'  # 包含 batch-size/fp16 等
         return env
 
 class Tasks:
@@ -174,12 +175,12 @@ def create_cmd(script, model=None, model_pre=None, task=None, ds=False):  # 生�
             'NCCL_NET_GDR_LEVEL=2',
             'deepspeed',
             '--master_port=12367',
-            "--include=localhost:0,1,2,3",
+            "--include=localhost:0,1,2,3",  # 占用显卡
             '--hostfile=',
         ]
     else:
         prefix = [
-            'CUDA_VISIBLE_DEVICES=6',
+            'CUDA_VISIBLE_DEVICES=6',  # 占用显卡
             'python',
             '-u',
         ]

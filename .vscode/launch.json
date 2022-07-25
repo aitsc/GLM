@@ -59,7 +59,7 @@
             "name": "单机单卡",
             "type": "python",
             "request": "launch",
-            "program": "finetune_glm.py", // finetune_glm pretrain_glm tsc/ac_模型加载和保存
+            "program": "pretrain_glm.py", // finetune_glm pretrain_glm tsc/ac_模型加载和保存
             "console": "integratedTerminal",
             "args": [
                 // 微调
@@ -67,8 +67,8 @@
                 "--custom_task=task_copa",
                 "--custom_script=finetune_superglue",
                 // 预训练
-                // "--custom_model_pre=block_base",
-                // "--custom_script=pretrain_nvidia",
+                "--custom_model_pre=block_base",
+                "--custom_script=pretrain_nvidia",
             ],
             "env": {"CUDA_VISIBLE_DEVICES":"6"},
         },

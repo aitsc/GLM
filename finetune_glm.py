@@ -120,20 +120,6 @@ def finetune_forward_step(batch, model, args, timers, mems):
     else:
         tokens, labels, position_ids, attention_mask = data['text'], data['label'], data['position'], data['mask']
         logits, *mems = model(tokens, position_ids, attention_mask)
-    # 输出模型图
-    try:
-        model_type = str(type(model)).split("'")[1]
-        model_img_path = f'{args.save}/{model_type}-logits'
-        if not os.path.exists(model_img_path + '.pdf'):
-            model_ = model
-            from train_utils import LocalDDP, TorchDDP, FP16_Module
-            while isinstance(model_, (LocalDDP, TorchDDP, FP16_Module)):
-                model_ = model_.module
-            g = make_dot(logits, params=dict(model_.named_parameters()), show_attrs=True, show_saved=True)
-            g.render(filename=model_img_path, cleanup=True, format='pdf')
-    except:
-        traceback.print_exc()
-        print('make_dot 模型图绘制失败 (常见原因是linux没安装相关graphviz包)')
 
     if args.adapet:
         batch_size, num_classes = logits.size()[:2]

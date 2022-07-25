@@ -483,7 +483,8 @@ class Stories(PromptReader):
 class BertBaseData(BertData):
     PATH = '/root/data/formatted_one_article_per_line'
     PATH = 'data/pretrain/bertbase/wikibook.txt'
-    PATH = 'data/pretrain/bertbase/books1.txt'
+    # PATH = 'data/pretrain/bertbase/books1.txt'
+    # PATH = 'data/pretrain/bertbase/books1.100.txt'
 
 
 class BertLargeData(BertData):

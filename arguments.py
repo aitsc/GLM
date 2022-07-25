@@ -184,7 +184,7 @@ def add_training_args(parser):
                        help='Load model for finetuning. Do not load optimizer '
                             'or rng state from checkpoint and set iteration to 0. '
                             'Assumed when loading a release checkpoint.')
-    group.add_argument('--resume-dataloader', action='store_true',
+    group.add_argument('--resume-dataloader', action='store_true',  # 恢复培训时恢复数据加载程序。不适用于tfrecords数据加载程序，在这种情况下，请尝试使用其他种子恢复。
                        help='Resume the dataloader when resuming training. '
                             'Does not apply to tfrecords dataloader, try resuming'
                             'with a different seed in this case.')
