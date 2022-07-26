@@ -120,7 +120,7 @@ class ConstructBlockStrategy:
         indices = [-1] + np.where(tokens == self.eod_token)[0].tolist()
         last_index = len(tokens)
         documents = []
-        for index in reversed(indices):
+        for index in reversed(indices):  # 只在 ENC-eos 之间选择跨度
             start_index = index
             if start_index + 1 < len(tokens) and tokens[start_index + 1] == self.tokenizer.get_command('ENC').Id:
                 start_index += 1
@@ -169,8 +169,9 @@ class ConstructBlockStrategy:
         loss_masks = loss_masks * mlm_masks
         return tokens, targets, loss_masks, position_ids
 
-    def make_block_data(self, tokens, loss_masks, attention_mask, block_spans, rng, task='bert'):
+    def make_block_data(self, tokens, loss_masks, attention_mask, block_spans, rng, task='bert'):  # 空白填充
         text_length = len(tokens)
+        # 初始 position_ids/block_spans
         position_ids = np.ones(len(tokens), dtype=np.long)
         for start, end in block_spans:
             position_ids[start + 1: end] = 0
@@ -187,9 +188,10 @@ class ConstructBlockStrategy:
             block_spans = [(start, end, idx) for idx, (start, end) in enumerate(block_spans)]
         else:
             block_spans = [(start, end, 0) for start, end in block_spans]
+        # 自回归部分的输入输出
         target_tokens, target_position_ids, target_block_position_ids, targets = [], [], [], []
         for start, end, idx in block_spans:
-            sop_token = 'sop' if idx == 0 else f"sop{idx}"
+            sop_token = 'sop' if idx == 0 else f"sop{idx}"  # 开始符号 [S]
             target_tokens.append([self.tokenizer.get_command(sop_token).Id])
             span_tokens = copy.deepcopy(tokens[start: end])
             if self.block_mask_prob > 0.0 and task == 'bert':
@@ -198,7 +200,7 @@ class ConstructBlockStrategy:
                         span_tokens[sub_idx] = self.tokenizer.get_command('dBLOCK').Id
             target_tokens.append(span_tokens)
             targets.append(tokens[start: end])
-            targets.append([self.tokenizer.get_command('eop').Id])
+            targets.append([self.tokenizer.get_command('eop').Id])  # 结束符号 [E]
             if not self.sentinel_token:
                 target_position_id = position_ids[start: end]
                 target_position_ids.append(target_position_id)
@@ -209,6 +211,7 @@ class ConstructBlockStrategy:
                 target_block_position_ids.append(np.arange(1, end - start + 2, dtype=np.long))
             else:
                 target_block_position_ids.append([1] * (end - start + 1))
+        # 自编码部分的输入
         block_spans.sort(key=lambda x: x[0])
         source_tokens, source_position_ids, local_spans = [], [], []
         last, current_length = 0, 0
@@ -219,7 +222,7 @@ class ConstructBlockStrategy:
                 mask_id = self.gap_sentence_mask
             else:
                 mask_token = 'MASK' if idx == 0 else f'MASK{idx}'
-                mask_id = self.tokenizer.get_command(mask_token).Id
+                mask_id = self.tokenizer.get_command(mask_token).Id  # 掩码符号 [MASK]
             local_spans.append((current_length, current_length + start - last))
             source_tokens.append(tokens[last: start])
             source_tokens.append([mask_id])
@@ -231,12 +234,14 @@ class ConstructBlockStrategy:
             local_spans.append((current_length, current_length + len(tokens) - last))
             source_tokens.append(tokens[last:])
             source_position_ids.append(position_ids[last:])
+        # 检查
         source_length = sum(map(len, source_tokens))
         if attention_mask is not None:
             assert source_length == attention_mask
         if target_tokens and self.eod_token in np.concatenate(target_tokens).tolist():
             print("Found EOS in target", self.tokenizer.DecodeIds(tokens))
             raise RuntimeError
+        # 合并连接
         if self.encoder_decoder:
             target_tokens = target_tokens + [self.tokenizer.get_command('eop').Id]
             loss_masks = np.ones(len(target_tokens), dtype=np.long)
@@ -271,13 +276,13 @@ class ConstructBlockStrategy:
         rng.shuffle(masked_lengths)
         tokens, loss_masks = sample['text'], sample['loss_mask']
         assert tokens[0] == self.tokenizer.get_command('ENC').Id
-        block_spans = self.sample_span_in_document(tokens, masked_lengths, rng)
+        block_spans = self.sample_span_in_document(tokens, masked_lengths, rng)  # 随机构建mask位置
         if len(block_spans) < len(masked_lengths):
             return None
         if self.masked_lm:
             data = self.make_masked_data(tokens, loss_masks, attention_mask, block_spans, rng)
         else:
-            data = self.make_block_data(tokens, loss_masks, attention_mask, block_spans, rng, task=task)
+            data = self.make_block_data(tokens, loss_masks, attention_mask, block_spans, rng, task=task)  # 构建出所有数据
         return data
 
     def split_samples(self, samples, rng):
@@ -457,7 +462,7 @@ class ConstructBlockStrategy:
                     'mode': mode}
 
     @staticmethod
-    def pad_batch(token_batch, target_batch, loss_mask_batch, position_id_batch):
+    def pad_batch(token_batch, target_batch, loss_mask_batch, position_id_batch):  # 填充到这个批次的最大长度
         seq_lengths = list(map(len, token_batch))
         if seq_lengths.count(seq_lengths[0]) != len(seq_lengths):
             max_length = max(seq_lengths)
