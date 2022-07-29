@@ -44,7 +44,7 @@ class GLMForMultiTokenCloze(torch.nn.Module):
         batch_ids = batch_ids.unsqueeze(1).expand_as(target_ids)
         seq_ids = torch.arange(target_ids.size(-1), dtype=torch.long, device=target_ids.device)
         seq_ids = seq_ids.unsqueeze(0).expand_as(target_ids)
-        logits = outputs[batch_ids, seq_ids, target_ids]
+        logits = outputs[batch_ids, seq_ids, target_ids]  # 第一维度取 batch_ids 中的值, 一一对应下去
         logits = (logits * logit_mask).sum(dim=1)
         if self.length_penalty > 0.0:
             logits = logits / logit_mask.sum(dim=1) ** self.length_penalty

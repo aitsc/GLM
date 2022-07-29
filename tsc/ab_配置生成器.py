@@ -6,7 +6,7 @@ class Models:
     def model_blocklm_base(env: dict, **kw):
         env['MODEL_TYPE'] = "blank-base"
         env['MODEL_PATH'] = "data/checkpoints/pretrain/blocklm-base-blank"  # 模型位置
-        env['MODEL_PATH'] = "data/checkpoints/pretrain/block_base/blocklm-blank07-24-09-23"  # 模型位置
+        env['MODEL_PATH'] = "data/checkpoints/pretrain/block_base/blocklm-blank07-25-13-30"  # 模型位置
         env['MODEL_ARGS'] = [
             '--block-lm', 
             '--num-layers 12', 
@@ -133,6 +133,7 @@ class Scripts:
             '--lr ' + env['LR_SINGLE'],
             '--overwrite',
             '--fp32-allreduce',
+            '--num-workers 0',  # 不使用多进程数据加载器方便调试
         ]
         return py_args
 
@@ -142,7 +143,7 @@ class Scripts:
         py_args = [
             *env['gpt_options'],
             '--checkpoint-activations',
-            '--train-iters 1500000',  # 迭代几次
+            '--train-iters 123456789',  # 迭代几次
             '--model-parallel-size 1',  # 模型并行数, 常调参数
             '--fp32-allreduce',
         ]

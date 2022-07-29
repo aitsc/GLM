@@ -316,7 +316,7 @@ class PVP(ABC):
                                         add_cls=True, add_sep=False, add_piece=True)
             ids, types, paddings, position_ids, sep, target_ids, loss_masks = data
             prompt_pos = [idx for idx, token in enumerate(ids) if token == prompt_id]
-            ids = [token if token != prompt_id else 0 for token in ids]
+            ids = [token if token != prompt_id else 0 for token in ids]  # prompt 为什么全部去掉?
             target_ids = self.get_verbalizer_ids()
             if example.label is not None:
                 label = self.label_list.index(example.label)
