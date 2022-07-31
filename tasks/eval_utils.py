@@ -50,9 +50,7 @@ def f1_macro_metric(predictions, labels, examples):
 
 global_tokenizer = None
 
-max_output = {
-    'epoch': 0,
-}
+max_output = {'epoch': 0, 'score_dict': {}}
 def accuracy_func_provider(single_dataset_provider, metric_dict, args, is_test=False, eval_func=None, output_func=None,
                            only_rank0=True, tokenizer=None):
     """Provide function that calculates accuracies."""
@@ -108,13 +106,13 @@ def accuracy_func_provider(single_dataset_provider, metric_dict, args, is_test=F
         output_str = ' >> |epoch: {}| overall: total = {}'.format(epoch, total)
         for i, (key, score) in enumerate(score_dict.items()):
             if i == 0:
-                if key in max_output and max_output[key] < score or key not in max_output:
-                    max_output[key] = score
+                if max_output['score_dict'].get(key, -1e10) < score:
                     max_output['epoch'] = epoch
+                    max_output['score_dict'] = score_dict
             output_str += " {} = {:.4f}".format(key, score)
             if summary_writer is not None and epoch >= 0 and not is_test:
                 summary_writer.add_scalar(f'Train/valid_{key}', score, epoch)
-        print_rank_0(output_str + str(max_output))
+        print_rank_0(output_str + ' max' + str(max_output))
         return score_dict
 
     return metrics_func

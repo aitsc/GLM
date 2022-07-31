@@ -22,10 +22,14 @@
                 "--master_addr=localhost",
                 "--master_port=12367",
                 // 微调
-                "finetune_glm.py",
-                "--custom_model=model_blocklm_base",
-                "--custom_task=task_rte",
-                "--custom_script=finetune_superglue",
+                // "finetune_glm.py",
+                // "--custom_model=model_blocklm_base",
+                // "--custom_task=rte",
+                // "--custom_script=finetune_superglue",
+                // 预训练
+                "pretrain_glm.py",
+                "--custom_model_pre=block_base",
+                "--custom_script=pretrain_nvidia",
             ],
             "env": {"CUDA_VISIBLE_DEVICES":"6"},
             "justMyCode": false,
@@ -47,7 +51,7 @@
                 // 微调
                 // "finetune_glm.py",
                 // "--custom_model=model_blocklm_base",
-                // "--custom_task=task_copa",
+                // "--custom_task=copa",
                 // "--custom_script=finetune_superglue",
                 "--deepspeed",
             ],
@@ -62,16 +66,18 @@
             "name": "单机单卡",
             "type": "python",
             "request": "launch",
-            "program": "finetune_glm.py", // finetune_glm pretrain_glm tsc/ac_模型加载和保存
             "console": "integratedTerminal",
+            // "program": "finetune_glm.py",
+            "program": "pretrain_glm.py",
+            // "program": "tsc/ac_模型加载和保存.py",
             "args": [
                 // 微调
                 "--custom_model=model_blocklm_base",
-                "--custom_task=task_copa",
+                "--custom_task=rte",
                 "--custom_script=finetune_superglue",
                 // 预训练
-                // "--custom_model_pre=block_base",
-                // "--custom_script=pretrain_nvidia",
+                "--custom_model_pre=block_base",
+                "--custom_script=pretrain_nvidia",
             ],
             "env": {"CUDA_VISIBLE_DEVICES":"6"},
             "justMyCode": false,

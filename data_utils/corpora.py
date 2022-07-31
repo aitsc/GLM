@@ -487,6 +487,10 @@ class BertBaseData(BertData):
     # PATH = 'data/pretrain/bertbase/books1.100.txt'
 
 
+class Wiki(BertData):
+    PATH = 'data/pretrain/bertbase/wiki.txt'
+
+
 class BertLargeData(BertData):
     PATH = '/dataset/c07bd62b/cognitive/zhengxiao/formatted_one_article_per_line_large'
 
@@ -528,5 +532,6 @@ NAMED_CORPORA = {
     'cc-news': CCNews,
     'pile': Pile,
     'stories': Stories,
-    'wudao': WuDaoCorpus
+    'wudao': WuDaoCorpus,
+    'wiki': Wiki,
 }
