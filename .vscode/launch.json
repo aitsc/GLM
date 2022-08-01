@@ -82,5 +82,63 @@
             "env": {"CUDA_VISIBLE_DEVICES":"6"},
             "justMyCode": false,
         },
+        {
+            "name": "deepspeed-2",
+            "type": "python",
+            "request": "launch",
+            "program": "~/anaconda3/envs/GLM/bin/deepspeed", //
+            "console": "integratedTerminal",
+            "args": [
+                "--master_port=12367",
+                "--num_nodes=1",
+                "--num_gpus=1",
+                "run_glm.py", //
+                "--deepspeed",
+                "--deepspeed_config=glm_config/config_blocklm_10B.json",
+                "--finetune",
+                "--cloze-eval",
+                "--experiment-name=blank-large-rte_220728", //
+                "--task=RTE",  //
+                "--data-dir=../GLM/data/english_data/superglue/RTE",  //
+                "--save=../GLM/data/checkpoints/other",  //
+                "--seq-length=256",  //
+                "--checkpoint-activations",
+                "--eval-batch-size=16",
+                "--save-epoch=100000",
+                "--num-workers=1",
+                "--no-load-optim",
+                "--no-load-lr-scheduler",
+                "--pattern-id=0",
+                "--fp16",
+                "--model-parallel-size=1",
+                "--epochs=50",
+                "--overwrite",
+                // MODEL_ARGS
+                "--block-lm",
+                "--num-layers=12",
+                "--hidden-size=768",
+                "--num-attention-heads=12",
+                "--max-position-embeddings=512",
+                "--tokenizer-model-type=bert-base-uncased",
+                "--tokenizer-type=BertWordPieceTokenizer",
+                "--load-pretrained=../GLM/data/checkpoints/pretrain/blocklm-base-blank", //
+                // TRAIN_ARGS
+                "--lr-decay-style=linear",
+                "--warmup=0.1",
+                "--weight-decay=1.0e-1",
+                "--pattern-id=1",
+                // COMMON_ARGS
+                "--save-interval=10000",
+                "--log-interval=50",
+                "--eval-interval=10000000",
+                "--eval-iters=100",
+            ],
+            "env": {
+                "NCCL_DEBUG":"info",
+                "NCCL_IB_DISABLE":"0",
+                "NCCL_NET_GDR_LEVEL":"2",
+            },
+            "justMyCode": false,
+        },
     ]
 }
