@@ -23,6 +23,26 @@ class Models:
         ]
         return env
 
+    @staticmethod
+    def block_tiny6(env: dict, **kw):
+        env['MODEL_TYPE'] = "blank-tiny6"
+        env['MODEL_PATH'] = "data/checkpoints/pretrain/block_tiny6/blocklm-blank07-31-07-36"  # 模型位置
+        env['MODEL_PATH'] = "data/checkpoints/other/student-em+pre6-64*100"
+        # env['MODEL_PATH'] = "data/checkpoints/other/student-pre-tiny-64*100000"
+        env['MODEL_ARGS'] = [
+            '--block-lm', 
+            '--num-layers 6', 
+            '--hidden-size 768', 
+            '--num-attention-heads 12', 
+            '--max-position-embeddings 512', 
+            '--tokenizer-model-type bert-base-uncased', 
+            '--tokenizer-type BertWordPieceTokenizer', 
+            '--load-pretrained ' + env['MODEL_PATH'],
+            '--fp16',
+            # '--fp32-allreduce',
+        ]
+        return env
+
 class Models_pre:
     @staticmethod
     def block_tiny6(env: dict, **kw):
@@ -404,7 +424,7 @@ def create_cmd(script, model=None, model_pre=None, task=None, ds=False):  # 生�
         ]
     else:
         prefix = [
-            'CUDA_VISIBLE_DEVICES=1',  # 占用显卡
+            'CUDA_VISIBLE_DEVICES=5',  # 占用显卡
             'python',
             '-u',
         ]
@@ -417,8 +437,8 @@ if __name__ == '__main__':
     model = model_pre = task = None
     print()
     script = Scripts.finetune_superglue
-    model = Models.model_blocklm_base
-    task = Tasks.wsc  # copa rte boolq wic cb multirc wsc_generative wsc record
+    model = Models.block_tiny6
+    task = Tasks.wic  # copa rte boolq wic cb multirc wsc_generative wsc record
     deepspeed = False
     print(create_cmd(script, model, model_pre, task, deepspeed))
     print()
