@@ -27,8 +27,8 @@ from pretrain_glm import evaluate_and_print_results
 from pretrain_glm import initialize_distributed
 from pretrain_glm import set_random_seed
 from configure_data import make_data_loader
-from torchviz import make_dot
-import traceback
+from pprint import pprint
+from datetime import datetime
 
 
 def process_batch(batch, args):
@@ -234,7 +234,8 @@ def _train(model, optimizer, lr_scheduler, forward_step,
             lm_loss, skipped_iter, _ = train_step(data, model, optimizer, lr_scheduler, args,
                                                   timers, forward_step_func=forward_step, single_step=True)
             args.iteration += 1
-            total_lm_loss += lm_loss.data.detach().float()
+            lm_loss_ = lm_loss.data.detach().float()
+            total_lm_loss += lm_loss_
 
             # Logging.
             if args.iteration % args.log_interval == 0:
@@ -245,7 +246,7 @@ def _train(model, optimizer, lr_scheduler, forward_step,
                            normalizer=args.log_interval)
                 report_iteration_metrics(summary_writer, optimizer, learning_rate, avg_lm_loss,
                                          elapsed_time * 1000.0 / args.log_interval, args.iteration, args.train_iters,
-                                         args)
+                                         args, iter_loss=lm_loss_.item())
                 total_lm_loss = 0.0
 
             # Evaluation
@@ -470,3 +471,13 @@ if __name__ == '__main__':
         raise NotImplementedError('Task {} is not implemented.'.format(args.task))
 
     main(args)
+    # 临时保存结果
+    from tasks.eval_utils import max_output
+    with open(args.custom_tmp_result, 'w', encoding='utf8') as w:
+        max_output['args'] = {
+            'epochs': args.epochs,
+            'save': args.save,
+        }
+        max_output['datetime.now'] = str(datetime.now())
+        json.dump(max_output, w, ensure_ascii=False, indent=2)
+        pprint(max_output)

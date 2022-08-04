@@ -29,6 +29,8 @@ from collections import OrderedDict
 from typing import List
 from tasks.data_utils import InputExample
 from sklearn.metrics import f1_score
+from tsc_draw import Draw
+import math
 
 
 def accuracy_metric(predictions, labels, examples):
@@ -51,6 +53,7 @@ def f1_macro_metric(predictions, labels, examples):
 global_tokenizer = None
 
 max_output = {'epoch': 0, 'score_dict': {}}
+epoch_score_dict_L = []  # 每个进来的 epoch
 def accuracy_func_provider(single_dataset_provider, metric_dict, args, is_test=False, eval_func=None, output_func=None,
                            only_rank0=True, tokenizer=None):
     """Provide function that calculates accuracies."""
@@ -105,7 +108,7 @@ def accuracy_func_provider(single_dataset_provider, metric_dict, args, is_test=F
         score_dict = {key: score / float(total) for key, score in score_dict.items()}
         output_str = ' >> |epoch: {}| overall: total = {}'.format(epoch, total)
         for i, (key, score) in enumerate(score_dict.items()):
-            if i == 0:
+            if i == 0 and epoch > 0:
                 if max_output['score_dict'].get(key, -1e10) < score:
                     max_output['epoch'] = epoch
                     max_output['score_dict'] = score_dict
@@ -113,6 +116,25 @@ def accuracy_func_provider(single_dataset_provider, metric_dict, args, is_test=F
             if summary_writer is not None and epoch >= 0 and not is_test:
                 summary_writer.add_scalar(f'Train/valid_{key}', score, epoch)
         print_rank_0(output_str + ' max' + str(max_output))
+        # 绘图
+        if epoch > 0:
+            epoch_score_dict_L.append((epoch, score_dict))
+            if len(epoch_score_dict_L) > 1:
+                r, c = len(score_dict), 1
+                draw = Draw(length=c * 10, width=r * 5, r=r, c=c)
+                x = [i[0] for i in epoch_score_dict_L]
+                interval = math.ceil(len(epoch_score_dict_L) / 80)
+                xticks = ['' if i%interval else str(j) for i, j in enumerate(x)]
+                for k in score_dict.keys():
+                    draw.add_line(
+                        x=x,
+                        xaxis='epoch',
+                        y_left=[[i[1][k] for i in epoch_score_dict_L]],
+                        yaxis_left=k,
+                        x_rotation=90,
+                        xticks=xticks,
+                    )
+                draw.draw(f'{args.save}/scores.pdf')
         return score_dict
 
     return metrics_func

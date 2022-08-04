@@ -406,6 +406,7 @@ def add_custom_args(parser: argparse.ArgumentParser):
     group.add_argument('--custom_model_pre', type=str, help='配置生成器中的模型(预训练的)', default=None)
     group.add_argument('--custom_task', type=str, help='配置生成器中的任务', default=None)
     group.add_argument('--custom_script', type=str, help='配置生成器中的脚本', default=None)
+    group.add_argument('--custom_tmp_result', type=str, help='临时保存结果供总进程读取', default='data/tmp_result.json')
     return parser
 
 

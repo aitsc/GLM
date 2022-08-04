@@ -25,3 +25,4 @@ unidecode
 tsc-auto
 torchviz
 torch_scatter
+tsc_draw

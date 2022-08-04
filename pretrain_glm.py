@@ -42,6 +42,7 @@ from utils import print_and_save_args
 from utils import print_rank_0
 from utils import get_sample_writer, get_log_dir, get_hostname
 import torch.distributed as dist
+from tsc_draw import Draw
 
 
 def get_masks_and_position_ids(data,
@@ -269,8 +270,14 @@ def forward_step(data_iterator, model, args, timers, mems):
 
     return loss, mems, mode
 
-
-def report_iteration_metrics(summary_writer, optimizer, lr, loss, elapsed_time, step, total_step, args):
+report_iteration_metrics_stat = {
+    'avg_lm_loss': [],  # avg_lm_loss
+    'iter_loss': [],  # iter loss
+    'elapsed_time': [],  # elapsed time per iteration (ms)
+    'lr': [],  # learning rate
+    'iteration': [],  # iteration
+}
+def report_iteration_metrics(summary_writer, optimizer, lr, loss, elapsed_time, step, total_step, args, iter_loss=0):
     log_string = ' iteration {:8d}/{:8d} |'.format(step, total_step)
     log_string += ' elapsed time per iteration (ms): {:.1f} |'.format(elapsed_time)
     log_string += ' learning rate {:.3E} |'.format(lr)
@@ -283,6 +290,30 @@ def report_iteration_metrics(summary_writer, optimizer, lr, loss, elapsed_time, 
         summary_writer.add_scalar(f'Train/lr', lr, step)
         summary_writer.add_scalar(f'Train/train_loss', loss, step)
         summary_writer.add_scalar(f'Train/elapsed_time', elapsed_time, step)
+    report_iteration_metrics_stat['avg_lm_loss'].append(loss)
+    report_iteration_metrics_stat['iter_loss'].append(iter_loss)
+    report_iteration_metrics_stat['elapsed_time'].append(elapsed_time)
+    report_iteration_metrics_stat['lr'].append(lr)
+    report_iteration_metrics_stat['iteration'].append(step)
+    # 绘图
+    if len(report_iteration_metrics_stat['iteration']) > 1 and args.iteration % (args.log_interval * 10) == 0:
+        r, c = len(report_iteration_metrics_stat) - 1, 1
+        draw = Draw(length=c * 10, width=r * 5, r=r, c=c)
+        iteration_L = report_iteration_metrics_stat['iteration']
+        for k, v in report_iteration_metrics_stat.items():
+            if k == 'iteration':
+                continue
+            interval = math.ceil(len(iteration_L) / 80)
+            xticks = ['' if i%interval else str(j) for i, j in enumerate(iteration_L)]
+            draw.add_line(
+                x=iteration_L,
+                xaxis='iteration',
+                y_left=[v],
+                yaxis_left=k,
+                x_rotation=90,
+                xticks=xticks,
+            )
+        draw.draw(f'{args.save}/report_iteration_metrics.pdf')
 
 
 def report_evaluate_metrics(summary_writer, prefix, loss, ppl, gpt_loss, bert_loss, sent_loss, multi_loss, step):
@@ -342,7 +373,8 @@ def train(model, optimizer, lr_scheduler,
         args.iteration += 1
 
         # Update losses.
-        total_lm_loss += lm_loss.data.detach().float()
+        lm_loss_ = lm_loss.data.detach().float()
+        total_lm_loss += lm_loss_
 
         # Logging.
         if args.iteration % args.log_interval == 0:
@@ -350,7 +382,8 @@ def train(model, optimizer, lr_scheduler,
             avg_lm_loss = total_lm_loss.item() / args.log_interval
             elapsed_time = timers('interval time').elapsed()
             report_iteration_metrics(summary_writer, optimizer, learning_rate, avg_lm_loss,
-                                     elapsed_time * 1000.0 / args.log_interval, args.iteration, args.train_iters, args)
+                                     elapsed_time * 1000.0 / args.log_interval, args.iteration, args.train_iters, args,
+                                     iter_loss=lm_loss_.item())
             total_lm_loss = 0.0
             if report_memory_flag:
                 report_memory('after {} iterations'.format(args.iteration))

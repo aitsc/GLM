@@ -28,7 +28,8 @@ class Models:
         env['MODEL_TYPE'] = "blank-tiny6"
         env['MODEL_PATH'] = "data/checkpoints/pretrain/block_tiny6/blocklm-blank07-31-07-36"  # 模型位置
         env['MODEL_PATH'] = "data/checkpoints/other/student-em+pre6-64*100"
-        # env['MODEL_PATH'] = "data/checkpoints/other/student-pre-tiny-64*100000"
+        # env['MODEL_PATH'] = "data/checkpoints/other/student-em+pre6-64*100000"
+        env['MODEL_PATH'] = "data/checkpoints/other/tiny608-03-14-55"
         env['MODEL_ARGS'] = [
             '--block-lm', 
             '--num-layers 6', 
@@ -112,7 +113,7 @@ class Models_pre:
         return env
 
 class Tasks:
-    EPOCH_SINGLE = '10000'  # 训练多少 epoch
+    EPOCH_SINGLE = ''  # 训练多少 epoch
     BATCH_SIZE = '16'
 
     @staticmethod
@@ -122,7 +123,7 @@ class Tasks:
         env['DATA_PATH'] = f'{env["DATA_ROOT"]}/{env["TASK_NAME"]}'
         env['MAX_SEQ_LEN'] = '256'
         env['LR_SINGLE'] = '1e-5'
-        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '50'
+        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '700'
         env['XXLARGE_EPOCH'] = '100'
         env['TRAIN_ARGS'] = [
             '--lr-decay-style linear', 
@@ -148,7 +149,7 @@ class Tasks:
         env['DATA_PATH'] = f'{env["DATA_ROOT"]}/{env["TASK_NAME"]}'
         env['MAX_SEQ_LEN'] = '256'
         env['LR_SINGLE'] = '1e-5'
-        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '50'
+        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '450'
         env['XXLARGE_EPOCH'] = '50'
         env['TRAIN_ARGS'] = [
             '--lr-decay-style linear', 
@@ -174,7 +175,7 @@ class Tasks:
         env['DATA_PATH'] = f'{env["DATA_ROOT"]}/{env["TASK_NAME"]}'
         env['MAX_SEQ_LEN'] = '256'
         env['LR_SINGLE'] = '1e-5'
-        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '50'
+        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '120'
         env['XXLARGE_EPOCH'] = '24'
         env['TRAIN_ARGS'] = [
             '--lr-decay-style linear', 
@@ -200,7 +201,7 @@ class Tasks:
         env['DATA_PATH'] = f'{env["DATA_ROOT"]}/{env["TASK_NAME"]}'
         env['MAX_SEQ_LEN'] = '256'
         env['LR_SINGLE'] = '1e-5'
-        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '3000'
+        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '220'
         env['XXLARGE_EPOCH'] = '40'
         env['TRAIN_ARGS'] = [
             '--lr-decay-style linear', 
@@ -226,7 +227,7 @@ class Tasks:
         env['DATA_PATH'] = f'{env["DATA_ROOT"]}/{env["TASK_NAME"]}'
         env['MAX_SEQ_LEN'] = '256'
         env['LR_SINGLE'] = '1e-5'
-        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '5000'
+        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '500'
         env['XXLARGE_EPOCH'] = '100'
         env['TRAIN_ARGS'] = [
             '--lr-decay-style linear', 
@@ -252,7 +253,7 @@ class Tasks:
         env['DATA_PATH'] = f'{env["DATA_ROOT"]}/{env["TASK_NAME"]}'
         env['MAX_SEQ_LEN'] = '512'
         env['LR_SINGLE'] = '1e-5'
-        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '15000'
+        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '350'
         env['XXLARGE_EPOCH'] = '12'
         env['TRAIN_ARGS'] = [
             '--lr-decay-style linear', 
@@ -278,7 +279,7 @@ class Tasks:
         env['DATA_PATH'] = f'{env["DATA_ROOT"]}/{env["TASK_NAME"]}'
         env['MAX_SEQ_LEN'] = '128'
         env['LR_SINGLE'] = '1e-5'
-        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '15000'
+        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '800'
         env['XXLARGE_EPOCH'] = '100'
         env['TRAIN_ARGS'] = [
             '--lr-decay-style linear', 
@@ -301,7 +302,7 @@ class Tasks:
         env['DATA_PATH'] = f'{env["DATA_ROOT"]}/{env["TASK_NAME"]}-negative'
         env['MAX_SEQ_LEN'] = '128'
         env['LR_SINGLE'] = '1e-5'
-        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '5000'
+        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '500'
         env['XXLARGE_EPOCH'] = '100'
         env['TRAIN_ARGS'] = [
             '--lr-decay-style linear', 
@@ -330,7 +331,7 @@ class Tasks:
         env['DATA_PATH'] = f'{env["DATA_ROOT"]}/{env["TASK_NAME"]}'
         env['MAX_SEQ_LEN'] = '512'
         env['LR_SINGLE'] = '1e-5'
-        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '5000'
+        env['EPOCH_SINGLE'] = Tasks.EPOCH_SINGLE if Tasks.EPOCH_SINGLE else '50'
         env['XXLARGE_EPOCH'] = '3'
         env['TRAIN_ARGS'] = [
             '--lr-decay-style linear', 
@@ -350,12 +351,12 @@ class Tasks:
 
 class Scripts:
     @staticmethod
-    def finetune_superglue(model_f, task_f, env={}, **kw):
+    def finetune_superglue(model_f, task_f, env={}, n_gpu=1, **kw):
         env['DATA_ROOT'] = 'data/english_data/superglue'  # 总数据位置
         model_f(env)
         task_f(env)
         env['SAVE_PATH'] = env['MODEL_PATH'] + '/finetune/' + env['TASK_NAME']
-        env['N_GPU'] = '1'  # BATCH_SIZE 均分到几张卡上
+        env['N_GPU'] = f'{n_gpu}'  # BATCH_SIZE 均分到几张卡上
         env['PER_GPU_BS'] = str(int(int(env['BATCH_SIZE']) / int(env['N_GPU'])))
         env['EXPERIMENT_NAME'] = env['EXPERIMENT_NAME'] + '-' + datetime.now().strftime('%m-%d-%H-%M')
         py_args = [
@@ -410,8 +411,7 @@ def split_py_args(py_args: list):  # 空格/等号切分成一节节, 路径不�
     return args
 
 
-def create_cmd(script, model=None, model_pre=None, task=None, ds=False):  # 生成可执行命令
-    py_args = split_py_args(script(model_f=model, task_f=task, model_pre_f=model_pre, ds=ds))
+def create_cmd(script, model=None, model_pre=None, task=None, ds=False, gpus='6'):  # 生成可执行命令
     if ds:
         prefix = [
             'NCCL_DEBUG=info',
@@ -419,15 +419,17 @@ def create_cmd(script, model=None, model_pre=None, task=None, ds=False):  # 生�
             'NCCL_NET_GDR_LEVEL=2',
             'deepspeed',
             '--master_port=12367',
-            "--include=localhost:1,2,3,6",  # 占用显卡
+            f"--include=localhost:{gpus}",  # 占用显卡
             '--hostfile=',
         ]
     else:
         prefix = [
-            'CUDA_VISIBLE_DEVICES=5',  # 占用显卡
+            f'CUDA_VISIBLE_DEVICES={gpus}',  # 占用显卡
             'python',
             '-u',
         ]
+    n_gpu = gpus.count(',') + 1  # 不管预训练固定bs和模型并行问题
+    py_args = split_py_args(script(model_f=model, task_f=task, model_pre_f=model_pre, ds=ds, n_gpu=n_gpu))
     py = f"{script.__name__.split('_')[0]}_glm.py"
     cmd = ' '.join(prefix + [py] + py_args)
     return cmd
@@ -438,7 +440,7 @@ if __name__ == '__main__':
     print()
     script = Scripts.finetune_superglue
     model = Models.block_tiny6
-    task = Tasks.wic  # copa rte boolq wic cb multirc wsc_generative wsc record
+    task = Tasks.rte  # copa rte boolq wic cb multirc wsc_generative wsc record
     deepspeed = False
     print(create_cmd(script, model, model_pre, task, deepspeed))
     print()
