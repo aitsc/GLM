@@ -123,7 +123,7 @@ def accuracy_func_provider(single_dataset_provider, metric_dict, args, is_test=F
                 r, c = len(score_dict), 1
                 draw = Draw(length=c * 10, width=r * 5, r=r, c=c)
                 x = [i[0] for i in epoch_score_dict_L]
-                interval = math.ceil(len(epoch_score_dict_L) / 80)
+                interval = math.ceil(len(epoch_score_dict_L) / 60)
                 xticks = ['' if i%interval else str(j) for i, j in enumerate(x)]
                 for k in score_dict.keys():
                     draw.add_line(

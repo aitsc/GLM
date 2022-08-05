@@ -12,13 +12,15 @@ from utils import ensure_directory_exists
 if __name__ == "__main__":
     script = Scripts.finetune_superglue
     model = Models.block_tiny6
+    gpus = sys.argv[1]  # 5
+
     max_output_L = []
     max_output_path = f"data/tmp_max_output/{datetime.now().strftime('%y%m%d_%H%M%S')}.json"
     ensure_directory_exists(max_output_path)
     for task in [
-        # Tasks.copa,
-        # Tasks.wsc_generative,
-        # Tasks.cb,
+        Tasks.copa,
+        Tasks.wsc_generative,
+        Tasks.cb,
         Tasks.rte,
         Tasks.boolq,
         Tasks.wic,
@@ -27,7 +29,7 @@ if __name__ == "__main__":
         # Tasks.record,
     ]:
         custom_tmp_result = datetime.now().strftime('%y%m%d_%H%M%S')
-        cmd = create_cmd(script, model=model, model_pre=None, task=task, ds=False, gpus='6')
+        cmd = create_cmd(script, model=model, model_pre=None, task=task, ds=False, gpus=gpus)
         cmd += f' --custom_tmp_result data/tmp_result/{custom_tmp_result}.json'
         print(cmd, '\n')
         os.system(cmd)

@@ -28,10 +28,10 @@
                 // "--custom_script=finetune_superglue",
                 // 预训练
                 "pretrain_glm.py",
-                "--custom_model_pre=block_base",
+                "--custom_model_pre=block_tiny6", // block_tiny6 block_base
                 "--custom_script=pretrain_nvidia",
             ],
-            "env": {"CUDA_VISIBLE_DEVICES":"6"},
+            "env": {"CUDA_VISIBLE_DEVICES":"5"},
             "justMyCode": false,
         },
         {
@@ -83,55 +83,58 @@
             "justMyCode": false,
         },
         {
-            "name": "deepspeed-2",
+            "name": "ds-tune",
             "type": "python",
             "request": "launch",
             "program": "~/anaconda3/envs/GLM/bin/deepspeed", //
             "console": "integratedTerminal",
             "args": [
-                "--master_port=12367",
-                "--num_nodes=1",
-                "--num_gpus=1",
-                "run_glm.py", //
+                "--master_port=12368",
+                "--include=localhost:5", //
+                "finetune_glm.py",
+                // deepspeed
                 "--deepspeed",
-                "--deepspeed_config=glm_config/config_blocklm_10B.json",
+                "--deepspeed_config=config/config_block_tiny6.json", // 注意其中的 batch size
+                "--experiment-name=tiny6-copa", //
+                "--checkpoint-activations",
+                "--model-parallel-size=1",
                 "--finetune",
                 "--cloze-eval",
-                "--experiment-name=blank-large-rte_220728", //
-                "--task=RTE",  //
-                "--data-dir=../GLM/data/english_data/superglue/RTE",  //
-                "--save=../GLM/data/checkpoints/other",  //
-                "--seq-length=256",  //
-                "--checkpoint-activations",
-                "--eval-batch-size=16",
-                "--save-epoch=100000",
-                "--num-workers=1",
-                "--no-load-optim",
-                "--no-load-lr-scheduler",
-                "--pattern-id=0",
+                "--data-dir=data/english_data/superglue/COPA",
+                // other
+                "--save=data/checkpoints/finetune",  //
+                "--num-workers=0",
                 "--fp16",
-                "--model-parallel-size=1",
-                "--epochs=50",
                 "--overwrite",
+                // "--no-load-optim",
+                // "--no-load-lr-scheduler",
                 // MODEL_ARGS
                 "--block-lm",
-                "--num-layers=12",
+                "--num-layers=6",
                 "--hidden-size=768",
                 "--num-attention-heads=12",
                 "--max-position-embeddings=512",
                 "--tokenizer-model-type=bert-base-uncased",
                 "--tokenizer-type=BertWordPieceTokenizer",
-                "--load-pretrained=../GLM/data/checkpoints/pretrain/blocklm-base-blank", //
+                "--load-pretrained=data/checkpoints/pretrain/block_tiny6/blocklm-blank07-31-07-36", //
                 // TRAIN_ARGS
+                "--task=COPA", //
                 "--lr-decay-style=linear",
                 "--warmup=0.1",
                 "--weight-decay=1.0e-1",
-                "--pattern-id=1",
+                "--pattern-id=0",
+                "--seq-length=256",  //
+                "--eval-batch-size=16",
+                "--save-epoch=10000",
+                "--batch-size=16",
+                "--lr=1e-5",
                 // COMMON_ARGS
                 "--save-interval=10000",
                 "--log-interval=50",
-                "--eval-interval=10000000",
+                "--eval-interval=1000",
                 "--eval-iters=100",
+                "--epochs=1000",
+                "--no-lazy-loader",
             ],
             "env": {
                 "NCCL_DEBUG":"info",

@@ -5,7 +5,7 @@ class Models:
     @staticmethod
     def model_blocklm_base(env: dict, **kw):
         env['MODEL_TYPE'] = "blank-base"
-        env['MODEL_PATH'] = "data/checkpoints/pretrain/blocklm-base-blank"  # 模型位置
+        env['MODEL_PATH'] = "data/checkpoints/pretrain/blocklm-base-blank"  # 官方模型
         # env['MODEL_PATH'] = "data/checkpoints/pretrain/block_base/blocklm-blank07-23-14-42"  # fp16-books1-64*140000
         # env['MODEL_PATH'] = "data/checkpoints/pretrain/block_base/blocklm-blank07-24-09-23"  # fp32-books1-64*140000
         # env['MODEL_PATH'] = "data/checkpoints/pretrain/block_base/blocklm-blank07-25-13-30"  # fp32-wiki+books1-64*390000
@@ -26,10 +26,11 @@ class Models:
     @staticmethod
     def block_tiny6(env: dict, **kw):
         env['MODEL_TYPE'] = "blank-tiny6"
-        env['MODEL_PATH'] = "data/checkpoints/pretrain/block_tiny6/blocklm-blank07-31-07-36"  # 模型位置
-        env['MODEL_PATH'] = "data/checkpoints/other/student-em+pre6-64*100"
-        # env['MODEL_PATH'] = "data/checkpoints/other/student-em+pre6-64*100000"
-        env['MODEL_PATH'] = "data/checkpoints/other/tiny608-03-14-55"
+        env['MODEL_PATH'] = "data/checkpoints/pretrain/block_tiny6/blocklm-blank07-31-07-36"  # tiny6(fp16)+wiki(15G) 128*285000
+        env['MODEL_PATH'] = "data/checkpoints/other/student-em+pre6-64*100"  # distil6(fp16)+wiki(15G)（预训练蒸馏 em+pre）
+        env['MODEL_PATH'] = "data/checkpoints/other/student-em+pre6-64*100000"  # distil6(fp16)+wiki(15G)（预训练蒸馏 em+pre）
+        env['MODEL_PATH'] = "data/checkpoints/other/tiny6+wiki15G_kd-code_64*150000"  # tiny6(fp16)+wiki(15G) kd代码预训练 64*150000
+        # env['MODEL_PATH'] = "data/checkpoints/other/tiny6+wiki15G_kd-code_64*300000"  # tiny6(fp16)+wiki(15G) kd代码预训练 64*300000
         env['MODEL_ARGS'] = [
             '--block-lm', 
             '--num-layers 6', 
@@ -57,6 +58,7 @@ class Models_pre:
             '--seq-length 512',
             '--max-position-embeddings 512', 
             '--save data/checkpoints/pretrain/block_tiny6',  # 模型保存位置
+            # '--load data/checkpoints/pretrain/block_tiny6/blocklm-blank07-31-07-36',  # 保存文件夹名会和这个一样
             '--resume-dataloader',
             '--train-data wiki',
             '--no-lazy-loader',
@@ -440,7 +442,7 @@ if __name__ == '__main__':
     print()
     script = Scripts.finetune_superglue
     model = Models.block_tiny6
-    task = Tasks.rte  # copa rte boolq wic cb multirc wsc_generative wsc record
+    task = Tasks.copa  # copa rte boolq wic cb multirc wsc_generative wsc record
     deepspeed = False
     print(create_cmd(script, model, model_pre, task, deepspeed))
     print()

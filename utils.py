@@ -364,6 +364,14 @@ def load_checkpoint(model, optimizer, lr_scheduler, args, no_deepspeed=False, no
 
         # Load the checkpoint.
         sd = torch.load(checkpoint_name, map_location='cpu')
+        # GLM-KD checkpoint
+        if 'transformer.word_embeddings.weight' in sd['module']:
+            sd['module']['word_embeddings.weight'] = sd['module']['transformer.word_embeddings.weight']
+            del sd['module']['transformer.word_embeddings.weight']
+        if 'mixins.block_position_embedding.block_position_embeddings.weight' in sd['module']:
+            sd['module']['transformer.block_position_embeddings.weight'] = sd['module'][
+                'mixins.block_position_embedding.block_position_embeddings.weight']
+            del sd['module']['mixins.block_position_embedding.block_position_embeddings.weight']
 
         # Model.
         if args.deepspeed:

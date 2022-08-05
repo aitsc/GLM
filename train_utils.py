@@ -42,6 +42,15 @@ def load_pretrained(model, checkpoint_path, args, task_tokens=None):
         return new_weights
 
     if args.block_lm:
+        # GLM-KD checkpoint
+        if 'transformer.word_embeddings.weight' in sd['module']:
+            sd['module']['word_embeddings.weight'] = sd['module']['transformer.word_embeddings.weight']
+            del sd['module']['transformer.word_embeddings.weight']
+        if 'mixins.block_position_embedding.block_position_embeddings.weight' in sd['module']:
+            sd['module']['transformer.block_position_embeddings.weight'] = sd['module'][
+                'mixins.block_position_embedding.block_position_embeddings.weight']
+            del sd['module']['mixins.block_position_embedding.block_position_embeddings.weight']
+
         if "transformer.block_position_embeddings.weight" in sd["module"]:
             position_weights = sd['module']["transformer.position_embeddings.weight"]
             if args.max_position_embeddings + 1 > position_weights.shape[0]:

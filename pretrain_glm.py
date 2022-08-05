@@ -296,14 +296,14 @@ def report_iteration_metrics(summary_writer, optimizer, lr, loss, elapsed_time, 
     report_iteration_metrics_stat['lr'].append(lr)
     report_iteration_metrics_stat['iteration'].append(step)
     # 绘图
-    if len(report_iteration_metrics_stat['iteration']) > 1 and args.iteration % (args.log_interval * 10) == 0:
+    if len(report_iteration_metrics_stat['iteration']) > 1 and args.iteration % (args.log_interval * 20) == 0:
         r, c = len(report_iteration_metrics_stat) - 1, 1
         draw = Draw(length=c * 10, width=r * 5, r=r, c=c)
         iteration_L = report_iteration_metrics_stat['iteration']
         for k, v in report_iteration_metrics_stat.items():
             if k == 'iteration':
                 continue
-            interval = math.ceil(len(iteration_L) / 80)
+            interval = math.ceil(len(iteration_L) / 60)
             xticks = ['' if i%interval else str(j) for i, j in enumerate(iteration_L)]
             draw.add_line(
                 x=iteration_L,
