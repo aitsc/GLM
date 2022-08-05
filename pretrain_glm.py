@@ -615,7 +615,7 @@ def main():
     # Data stuff.
     global tokenizer
     tokenizer = prepare_tokenizer(args)
-    train_data, val_data, test_data, = get_train_val_test_data(args, tokenizer)  # 花了几个小时研究这个
+    train_data, val_data, test_data, = get_train_val_test_data(args, tokenizer)
     multi_train_data, multi_val_data = None, None
     if args.multi_task_ratio > 0.0:
         multi_train_data, multi_val_data = build_multi_task_dataset(args, tokenizer)

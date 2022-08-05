@@ -12,7 +12,6 @@ from model import PyTorchDistributedDataParallel as TorchDDP, DistributedDataPar
 from model.modeling_bert import BertForMultipleChoice, BertForSequenceClassification
 from utils import print_rank_0, get_checkpoint_name, get_checkpoint_iteration
 from torchviz import make_dot
-import traceback
 import os
 
 
@@ -349,8 +348,8 @@ def train_step(data_iterator, model, optimizer, lr_scheduler, args, timers, forw
         # print_rank_0("Forward step")
         if not args.deepspeed:
             lm_loss /= args.gradient_accumulation_steps
-        # 输出模型图
-        try:
+        # output model_img
+        if torch.distributed.get_rank() == 0 and args.custom_model_img:
             model_type = str(type(model)).split("'")[1]
             model_img_path = f'{args.save}/lm_loss-{model_type}'
             if not os.path.exists(model_img_path + '.pdf'):
@@ -360,9 +359,6 @@ def train_step(data_iterator, model, optimizer, lr_scheduler, args, timers, forw
                     model_ = model_.module
                 g = make_dot(lm_loss, params=dict(model_.named_parameters()), show_attrs=True, show_saved=True)
                 g.render(filename=model_img_path, cleanup=True, format='pdf')
-        except:
-            traceback.print_exc()
-            print('make_dot 模型图绘制失败 (常见原因是linux没安装相关graphviz包)')
 
         reduced_loss = lm_loss.detach().clone().view(1)
         torch.distributed.all_reduce(reduced_loss.data, group=mpu.get_data_parallel_group())

@@ -29,7 +29,7 @@ class Models:
         env['MODEL_PATH'] = "data/checkpoints/pretrain/block_tiny6/blocklm-blank07-31-07-36"  # tiny6(fp16)+wiki(15G) 128*285000
         env['MODEL_PATH'] = "data/checkpoints/other/student-em+pre6-64*100"  # distil6(fp16)+wiki(15G)（预训练蒸馏 em+pre）
         env['MODEL_PATH'] = "data/checkpoints/other/student-em+pre6-64*100000"  # distil6(fp16)+wiki(15G)（预训练蒸馏 em+pre）
-        env['MODEL_PATH'] = "data/checkpoints/other/tiny6+wiki15G_kd-code_64*150000"  # tiny6(fp16)+wiki(15G) kd代码预训练 64*150000
+        # env['MODEL_PATH'] = "data/checkpoints/other/tiny6+wiki15G_kd-code_64*150000"  # tiny6(fp16)+wiki(15G) kd代码预训练 64*150000
         # env['MODEL_PATH'] = "data/checkpoints/other/tiny6+wiki15G_kd-code_64*300000"  # tiny6(fp16)+wiki(15G) kd代码预训练 64*300000
         env['MODEL_ARGS'] = [
             '--block-lm', 

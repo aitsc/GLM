@@ -10,6 +10,8 @@ from utils import ensure_directory_exists
 
 
 if __name__ == "__main__":
+    # python -u tsc/af_auto_tune.py 6
+
     script = Scripts.finetune_superglue
     model = Models.block_tiny6
     gpus = sys.argv[1]  # 5

@@ -339,7 +339,7 @@ def finetune(args, train_valid_datasets_provider, model_kwargs, forward_step=fin
     if end_of_epoch_callback_provider is not None:
         if train_valid_datasets_provider is not None and args.epochs > 0 and not args.no_validation:
             end_of_epoch_callback = end_of_epoch_callback_provider(args, tokenizer, is_test=False)
-        end_of_train_callback = end_of_epoch_callback_provider(args, tokenizer, is_test=True)
+        end_of_train_callback = end_of_epoch_callback_provider(args, tokenizer, is_test=False)  # dev / test
     timers('callback function').stop()
 
     # Build model, optimizer and learning rate scheduler.
