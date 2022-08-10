@@ -27,7 +27,7 @@
     - |epoch: 399| overall: total = 104 accuracy = 75.0000 max{'epoch': 318, 'score_dict': {'accuracy': 77.88461538461539, 'type': 'validation', 'epoch': 318}}
 ### record
 - python -u finetune_glm.py --finetune --cloze-eval --experiment-name blank-base-ReCoRD-07-29-10-40 --task ReCoRD --data-dir data/english_data/superglue/ReCoRD --save data/checkpoints/pretrain/blocklm-base-blank/finetune/ReCoRD --seq-length 512 --checkpoint-activations --eval-batch-size 16 --save-epoch 100000 --block-lm --num-layers 12 --hidden-size 768 --num-attention-heads 12 --max-position-embeddings 512 --tokenizer-model-type bert-base-uncased --tokenizer-type BertWordPieceTokenizer --load-pretrained data/checkpoints/pretrain/blocklm-base-blank --fp16 --lr-decay-style linear --warmup 0.1 --weight-decay 1.0e-1 --pattern-id 0 --save-interval 10000 --log-interval 50 --eval-interval 1000 --eval-iters 100 --batch-size 16 --epochs 10000 --lr 1e-5 --overwrite --num-workers 0
-- 
+    - |epoch: 71| overall: total = 10000 EM = 72.0900 F1 = 72.7462 max{'epoch': 68, 'score_dict': {'EM': 72.3, 'F1': 72.96220779220786, 'type': 'validation', 'epoch': 68}}
 
 ## blocklm-blank07-23-14-42
 fp16-books1-64*140000

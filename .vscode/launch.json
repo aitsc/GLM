@@ -67,17 +67,17 @@
             "type": "python",
             "request": "launch",
             "console": "integratedTerminal",
-            // "program": "finetune_glm.py",
-            "program": "pretrain_glm.py",
+            "program": "finetune_glm.py",
+            // "program": "pretrain_glm.py",
             // "program": "tsc/ac_模型加载和保存.py",
             "args": [
                 // 微调
-                "--custom_model=model_blocklm_base",
-                "--custom_task=rte",
+                "--custom_model=block_tiny6",
+                "--custom_task=cb",
                 "--custom_script=finetune_superglue",
                 // 预训练
-                "--custom_model_pre=block_base",
-                "--custom_script=pretrain_nvidia",
+                // "--custom_model_pre=block_base",
+                // "--custom_script=pretrain_nvidia",
             ],
             "env": {"CUDA_VISIBLE_DEVICES":"6"},
             "justMyCode": false,

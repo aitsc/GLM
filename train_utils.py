@@ -40,6 +40,13 @@ def load_pretrained(model, checkpoint_path, args, task_tokens=None):
         new_weights[:original_length] = state_weights
         return new_weights
 
+    # 兼容 student model
+    prefix = 'model.'
+    for k, v in list(sd['module'].items()):
+        if k[:len(prefix)] == prefix:
+            sd['module'][k[len(prefix):]] = v
+            del sd['module'][k]
+
     if args.block_lm:
         # GLM-KD checkpoint
         if 'transformer.word_embeddings.weight' in sd['module']:

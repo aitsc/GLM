@@ -31,6 +31,9 @@ class Models:
         env['MODEL_PATH'] = "data/checkpoints/other/student-em+pre6-64*100000"  # distil6(fp16)+wiki(15G)（预训练蒸馏 em+pre）
         # env['MODEL_PATH'] = "data/checkpoints/other/tiny6+wiki15G_kd-code_64*150000"  # tiny6(fp16)+wiki(15G) kd代码预训练 64*150000
         # env['MODEL_PATH'] = "data/checkpoints/other/tiny6+wiki15G_kd-code_64*300000"  # tiny6(fp16)+wiki(15G) kd代码预训练 64*300000
+        env['MODEL_PATH'] = "data/checkpoints/distill/tiny6/pre-distill6+wikibook19G"  # pre-distill6(fp16)+wikibook(19G) 32*180000
+        env['MODEL_PATH'] = "data/checkpoints/distill/tiny6/pre32-distill6+wikibook19G"  # pre32-distill6(fp16)+wikibook(19G),预训练中间层运算前转32位 32*210000
+        env['MODEL_PATH'] = "data/checkpoints/distill/tiny6/pre32-distill6+wikibook19G-18"  # pre32-distill6(fp16)+wikibook(19G),预训练中间层运算前转32位 32*180000
         env['MODEL_ARGS'] = [
             '--block-lm', 
             '--num-layers 6', 
