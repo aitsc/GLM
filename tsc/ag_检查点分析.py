@@ -58,12 +58,14 @@ path_info = OrderedDict()
 save_low_byte = 1e8  # 小于这个字节的文件不再递归
 # save_low_byte = 0
 for path in [
-    'data/checkpoints/pretrain/blocklm-base-blank/150000/mp_rank_00_model_states.pt',  # 218,710,529 字节
-    'data/checkpoints/other/student-pre-tiny-64*100000/100000/mp_rank_00_model_states.pt',  # 935,392,964 字节
-    'data/checkpoints/pretrain/block_base/blocklm-blank07-25-13-30/390000/mp_rank_00_model_states.pt',  # 1,312,226,109 字节
-    'data/checkpoints/pretrain/block_base/blocklm-blank07-23-14-42/140000/mp_rank_00_model_states.pt',  # 1,530,788,676 字节
-    'data/checkpoints/pretrain/block_base/test/torch.distributed-gpu2mp2/200/mp_rank_01_model_states.pt',
-    'data/checkpoints/pretrain/block_base/test/deepspeed-gpu2mp2/300/mp_rank_01_model_states.pt',
+    # 'data/checkpoints/pretrain/blocklm-base-blank/150000/mp_rank_00_model_states.pt',  # 218,710,529 字节
+    # 'data/checkpoints/other/student-pre-tiny-64*100000/100000/mp_rank_00_model_states.pt',  # 935,392,964 字节
+    # 'data/checkpoints/pretrain/block_base/blocklm-blank07-25-13-30/390000/mp_rank_00_model_states.pt',  # 1,312,226,109 字节
+    # 'data/checkpoints/pretrain/block_base/blocklm-blank07-23-14-42/140000/mp_rank_00_model_states.pt',  # 1,530,788,676 字节
+    # 'data/checkpoints/pretrain/block_base/test/torch.distributed-gpu2mp2/200/mp_rank_01_model_states.pt',
+    # 'data/checkpoints/pretrain/block_base/test/deepspeed-gpu2mp2/300/mp_rank_01_model_states.pt',
+    # 'data/checkpoints/pretrain/blocklm-large-blank/200000/mp_rank_00_model_states.pt',
+    'data/checkpoints/pretrain/blocklm-xxlarge/250000/mp_rank_00_model_states.pt',
 ]:
     print(getsize(path), ':', path)
     pt_dict = torch.load(path)

@@ -485,13 +485,17 @@ class BlankLMEvaluater(DecoderEvaluater):
                     store.set(uid, prediction)
                 if (idx + 1) % args.log_interval == 0:
                     print_rank_0(f"Iteration {idx + 1} / {len(dataloader)}")
+                if idx > 50 and args.custom_blank_task_test:
+                    break
 
         model.train()
         torch.distributed.barrier()
         print_rank_0("Evaluation completed")
         predictions, examples = [], []
-        for uid, example in example_dict.items():
+        for i, (uid, example) in enumerate(example_dict.items()):
             predictions.append(store.get(uid).decode('utf-8'))
             examples.append(example)
+            if args.custom_blank_task_test and i > 3:
+                break
         torch.distributed.barrier()
         return predictions, [], examples

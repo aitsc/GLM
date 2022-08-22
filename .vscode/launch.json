@@ -20,18 +20,25 @@
                 "--nnodes=1",
                 "--node_rank=0",
                 "--master_addr=localhost",
-                "--master_port=12367",
+                "--master_port=12327",
+                // 预训练
+                // "pretrain_glm.py",
+                // "--custom_model_pre=block_tiny6", // block_tiny6 block_base
+                // "--custom_script=pretrain_nvidia",
                 // 微调
-                // "finetune_glm.py",
-                // "--custom_model=model_blocklm_base",
+                "finetune_glm.py",
+                "--custom_model=model_blocklm_base",
+                // 分类模型
                 // "--custom_task=rte",
                 // "--custom_script=finetune_superglue",
-                // 预训练
-                "pretrain_glm.py",
-                "--custom_model_pre=block_tiny6", // block_tiny6 block_base
-                "--custom_script=pretrain_nvidia",
+                // 语言模型
+                // "--custom_task=zero_wikitext", // zero_lambada zero_lambada_uni zero_lm zero_lm_uni zero_wikitext
+                // "--custom_script=evaluate_lm",
+                // 序列模型
+                "--custom_task=seq_blank", // seq_blank
+                "--custom_script=finetune_blank", // finetune_blank
             ],
-            "env": {"CUDA_VISIBLE_DEVICES":"5"},
+            "env": {"CUDA_VISIBLE_DEVICES":"2"},
             "justMyCode": false,
         },
         {
@@ -73,7 +80,7 @@
             "args": [
                 // 微调
                 "--custom_model=block_tiny6",
-                "--custom_task=cb",
+                "--custom_task=wsc_generative",
                 "--custom_script=finetune_superglue",
                 // 预训练
                 // "--custom_model_pre=block_base",

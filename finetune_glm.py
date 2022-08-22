@@ -255,6 +255,8 @@ def _train(model, optimizer, lr_scheduler, forward_step,
                 evaluate_and_print_results(prefix, valid_dataloader, model, args, timers, step=args.iteration,
                                            verbose=False, forward_step_func=forward_step,
                                            summary_writer=summary_writer)
+            if iteration_ > 50 and args.custom_blank_task_test:
+                break
 
         # Checkpointing at the end of each epoch.
         if args.save and (epoch + 1) % args.save_epoch == 0:
@@ -437,6 +439,12 @@ def finetune(args, train_valid_datasets_provider, model_kwargs, forward_step=fin
             print_rank_0('evaluation only mode, setting epoch to -1')
             score_dict = end_of_train_callback(model, epoch=-1, output_predictions=True)
     if score_dict is not None and torch.distributed.get_rank() == 0:
+        for i, (key, score) in enumerate(score_dict.items()):
+            if i == 0:
+                from tasks.eval_utils import max_output
+                if max_output['score_dict'].get(key, -1e10) < score:
+                    max_output['epoch'] = -1
+                    max_output['score_dict'] = score_dict.copy()
         score_dict.update({"type": "test"})
         with open(os.path.join(args.log_dir, "test_results.json"), "w") as output:
             output.write(json.dumps(score_dict) + "\n")

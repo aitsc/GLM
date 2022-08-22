@@ -21,6 +21,7 @@ class Models:
             '--fp16',
             # '--fp32-allreduce',
         ]
+        env['deepspeed_config'] = 'config_tasks/config_blocklm_base.json'
         return env
 
     @staticmethod
@@ -46,6 +47,7 @@ class Models:
             '--fp16',
             # '--fp32-allreduce',
         ]
+        env['deepspeed_config'] = 'config_tasks/config_blocklm_tiny6.json'
         return env
 
 class Models_pre:
@@ -354,9 +356,104 @@ class Tasks:
         env['BATCH_SIZE'] = Tasks.BATCH_SIZE
         return env
 
+    @staticmethod
+    def zero_lambada(env: dict, **kw):
+        env['TASK_NAME'] = 'lambda'
+        env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-{env["TASK_NAME"]}'
+        env['DATA_PATH'] = f'{env["DATA_ROOT"]}/lambada_test.jsonl'
+        env['EVALUATE_ARGS'] = [
+            '--eval-batch-size 16', 
+            '--seq-length 512',
+        ]
+        return env
+
+    @staticmethod
+    def zero_lambada_uni(env: dict, **kw):
+        env['TASK_NAME'] = 'lambda'
+        env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-{env["TASK_NAME"]}_uni'
+        env['DATA_PATH'] = f'{env["DATA_ROOT"]}/lambada_test.jsonl'
+        env['EVALUATE_ARGS'] = [
+            '--eval-batch-size 16', 
+            '--seq-length 512',
+            '--unidirectional',
+        ]
+        return env
+
+    @staticmethod
+    def zero_lm(env: dict, **kw):
+        env['TASK_NAME'] = 'language_model'
+        env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-lm'
+        env['DATA_PATH'] = f'{env["DATA_ROOT"]}/bert-large-test.txt'
+        env['EVALUATE_ARGS'] = [
+            '--eval-batch-size 16', 
+            '--seq-length 512',
+            '--overlapping-eval 256',
+        ]
+        return env
+
+    @staticmethod
+    def zero_lm_uni(env: dict, **kw):
+        env['TASK_NAME'] = 'language_model'
+        env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-lm_uni'
+        env['DATA_PATH'] = f'{env["DATA_ROOT"]}/bert-large-test.txt'
+        env['EVALUATE_ARGS'] = [
+            '--eval-batch-size 16', 
+            '--seq-length 512',
+            '--overlapping-eval 256',
+            '--unidirectional',
+        ]
+        return env
+
+    @staticmethod
+    def zero_wikitext(env: dict, **kw):
+        env['TASK_NAME'] = 'wikitext'
+        env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-wikitext'
+        env['DATA_PATH'] = f'{env["DATA_ROOT"]}/wikitext-103/wiki.test.tokens'
+        env['EVALUATE_ARGS'] = [
+            '--eval-batch-size 16', 
+            '--seq-length 512',  # --max-position-embeddings 能到 1024 就用 1024
+            '--overlapping-eval 256',
+        ]
+        return env
+
+    @staticmethod
+    def seq_blank(env: dict, **kw):
+        env['TASK_NAME'] = 'blank'
+        env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-blank-{env["MASK_RATIO"]}'
+        env['DATA_PATH'] = f'{env["DATA_ROOT"]}/blank_yahoo'
+        env['TRAIN_ARGS'] = [
+            '--epochs 5', 
+            '--batch-size 16', 
+            '--lr 1e-5',
+            '--lr-decay-style linear',
+            '--warmup 0.06',
+            '--weight-decay 1.0e-1',
+            '--label-smoothing 0.1',
+            '--blank-maskratio ' + env["MASK_RATIO"],
+            '--save-epoch 5',
+        ]
+        env['COMMON_ARGS'] = [
+            '--save-interval 10000',
+            '--log-interval 50',
+            '--eval-interval 1000',
+            '--eval-iters 100',
+            '--eval-epoch 100',
+        ]
+        env['TASK_ARGS'] = [
+            '--src-seq-length 256',
+            '--tgt-seq-length 200',
+            '--min-tgt-length 0',
+            '--length-penalty 1',
+            '--no-repeat-ngram-size 3',
+            '--eval-batch-size 8',
+        ]
+        return env
+
+
 class Scripts:
     @staticmethod
-    def finetune_superglue(model_f, task_f, env={}, n_gpu=1, **kw):
+    def finetune_superglue(model_f, task_f, env=None, n_gpu=1, ds=True, **kw):
+        env = {} if env is None else env
         env['DATA_ROOT'] = 'data/english_data/superglue'  # 总数据位置
         model_f(env)
         task_f(env)
@@ -384,10 +481,12 @@ class Scripts:
             '--overwrite',
             '--num-workers 0',  # 不使用多进程数据加载器方便调试
         ]
+        Scripts.add_ds(py_args, env, ds)
         return py_args
 
     @staticmethod
-    def pretrain_nvidia(model_pre_f, ds=True, env={}, **kw):
+    def pretrain_nvidia(model_pre_f, ds=True, env=None, **kw):
+        env = {} if env is None else env
         model_pre_f(env)
         py_args = [
             *env['gpt_options'],
@@ -396,12 +495,66 @@ class Scripts:
             '--model-parallel-size 1',  # 模型并行数, 常调参数
             # '--save-interval 100',  # 迭代几次保存一次, 默认 5000
         ]
+        Scripts.add_ds(py_args, env, ds)
+        return py_args
+
+    @staticmethod
+    def evaluate_lm(model_f, task_f, env=None, ds=True, **kw):
+        env = {} if env is None else env
+        env['DATA_ROOT'] = 'data/english_data/NLG'  # 总数据位置
+        model_f(env)
+        task_f(env)
+        env['SAVE_PATH'] = env['MODEL_PATH'] + '/evaluate_lm/' + env['TASK_NAME']
+        env['EXPERIMENT_NAME'] = env['EXPERIMENT_NAME'] + '-' + datetime.now().strftime('%m-%d-%H-%M')
+        py_args = [
+            '--finetune',
+            '--experiment-name ' + env['EXPERIMENT_NAME'],
+            '--task ' + env['TASK_NAME'],
+            '--valid-data ' + env['DATA_PATH'],
+            '--save ' + env['SAVE_PATH'],
+            '--checkpoint-activations',
+            '--overwrite',
+            *env['MODEL_ARGS'],
+            *env['EVALUATE_ARGS'],
+        ]
+        Scripts.add_ds(py_args, env, ds)
+        return py_args
+
+    @staticmethod
+    def finetune_blank(model_f, task_f, env=None, ds=True, **kw):
+        env = {} if env is None else env
+        env['DATA_ROOT'] = 'data/english_data/NLG'  # 总数据位置
+        env['MASK_RATIO'] = '0.1'  # 比例
+        model_f(env)
+        task_f(env)
+        env['SAVE_PATH'] = env['MODEL_PATH'] + '/finetune_blank/' + env['TASK_NAME']
+        env['EXPERIMENT_NAME'] = env['EXPERIMENT_NAME'] + '-' + datetime.now().strftime('%m-%d-%H-%M')
+        py_args = [
+            '--finetune',
+            '--experiment-name ' + env['EXPERIMENT_NAME'],
+            '--task ' + env['TASK_NAME'],
+            '--data-dir ' + env['DATA_PATH'],
+            '--save ' + env['SAVE_PATH'],
+            '--checkpoint-activations',
+            '--overwrite',
+            *env['MODEL_ARGS'],
+            *env['TRAIN_ARGS'],
+            *env['COMMON_ARGS'],
+            *env['TASK_ARGS'],
+            '--num-workers 0',  # 不使用多进程数据加载器方便调试
+        ]
+        Scripts.add_ds(py_args, env, ds)
+        return py_args
+
+    @staticmethod
+    def add_ds(py_args, env, ds=True):
         if ds:
             py_args += [
                 '--deepspeed-activation-checkpointing',
                 '--deepspeed',
                 '--deepspeed_config ' + env['deepspeed_config'],
             ]
+        py_args += ['--custom_model_img']
         return py_args
 
 
@@ -446,11 +599,16 @@ if __name__ == '__main__':
     script = Scripts.finetune_superglue
     model = Models.block_tiny6
     task = Tasks.copa  # copa rte boolq wic cb multirc wsc_generative wsc record
-    deepspeed = False
-    print(create_cmd(script, model, model_pre, task, deepspeed))
+    print(create_cmd(script, model, model_pre, task, False))
     print()
+    
     script = Scripts.pretrain_nvidia
     model_pre = Models_pre.block_tiny6
-    deepspeed = True
-    print(create_cmd(script, model, model_pre, task, deepspeed))
+    print(create_cmd(script, model, model_pre, task, True))
+    print()
+
+    script = Scripts.evaluate_lm
+    model = Models.model_blocklm_base
+    task = Tasks.zero_lambada  # 
+    print(create_cmd(script, model, model_pre, task, False))
     print()
