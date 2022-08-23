@@ -449,6 +449,136 @@ class Tasks:
         ]
         return env
 
+    @staticmethod
+    def seq_cnndm_org(env: dict, **kw):
+        env['TASK_NAME'] = 'cnn_dm_original'
+        env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-{env["TASK_NAME"]}'
+        env['DATA_PATH'] = f'{env["DATA_ROOT"]}/cnn_dm_original'
+        env['TRAIN_ARGS'] = [
+            '--epochs 10', 
+            '--batch-size 8', 
+            '--lr 1e-5',
+            '--lr-decay-style linear',
+            '--warmup 0.06',
+            '--weight-decay 1.0e-1',
+            '--label-smoothing 0.1',
+        ]
+        env['COMMON_ARGS'] = [
+            '--save-interval 10000',
+            '--log-interval 50',
+            '--eval-interval 1000',
+            '--eval-iters 100',
+            '--eval-epoch 2',
+        ]
+        env['TASK_ARGS'] = [
+            '--src-seq-length 608',
+            '--tgt-seq-length 160',
+            '--min-tgt-length 55',
+            '--length-penalty 0.7',
+            '--no-repeat-ngram-size 3',
+            '--num-beams 5',
+            '--select-topk',
+            '--eval-batch-size 1',
+        ]
+        return env
+
+    @staticmethod
+    def seq_cnndm(env: dict, **kw):
+        env['TASK_NAME'] = 'cnn_dm_original'
+        env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-{env["TASK_NAME"]}'
+        env['DATA_PATH'] = f'{env["DATA_ROOT"]}/cnn_dm'
+        env['TRAIN_ARGS'] = [
+            '--epochs 15', 
+            '--batch-size 8', 
+            '--lr 3e-5',
+            '--lr-decay-style linear',
+            '--warmup 0.06',
+            '--weight-decay 1.0e-1',
+            '--label-smoothing 0.1',
+        ]
+        env['COMMON_ARGS'] = [
+            '--save-interval 10000',
+            '--log-interval 50',
+            '--eval-interval 1000',
+            '--eval-iters 100',
+        ]
+        env['TASK_ARGS'] = [
+            '--src-seq-length 608',
+            '--tgt-seq-length 160',
+            '--min-tgt-length 55',
+            '--length-penalty 0.7',
+            '--no-repeat-ngram-size 3',
+            '--num-beams 5',
+            '--select-topk',
+            '--eval-batch-size 4',
+        ]
+        return env
+
+    @staticmethod
+    def seq_xsum(env: dict, **kw):
+        env['TASK_NAME'] = 'xsum'
+        env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-{env["TASK_NAME"]}'
+        env['DATA_PATH'] = f'{env["DATA_ROOT"]}/bbc-summary-data'
+        env['TRAIN_ARGS'] = [
+            '--epochs 6', 
+            '--batch-size 8', 
+            '--lr 1e-5',
+            '--lr-decay-style linear',
+            '--warmup 0.06',
+            '--weight-decay 1.0e-1',
+            '--label-smoothing 0.1',
+        ]
+        env['COMMON_ARGS'] = [
+            '--save-interval 10000',
+            '--log-interval 50',
+            '--eval-interval 1000',
+            '--eval-iters 100',
+            '--eval-epoch 2',
+        ]
+        env['TASK_ARGS'] = [
+            '--src-seq-length 608',
+            '--tgt-seq-length 60',
+            '--min-tgt-length 10',
+            '--length-penalty 1.',
+            '--no-repeat-ngram-size 3',
+            '--num-beams 6',
+            '--select-topk',
+            '--eval-batch-size 1',
+        ]
+        return env
+
+    @staticmethod
+    def seq_gigaword(env: dict, **kw):
+        env['TASK_NAME'] = 'gigaword'
+        env['EXPERIMENT_NAME'] = f'{env["MODEL_TYPE"]}-{env["TASK_NAME"]}'
+        env['DATA_PATH'] = f'{env["DATA_ROOT"]}/gigaword/org_data'
+        env['TRAIN_ARGS'] = [
+            '--epochs 10', 
+            '--batch-size 16', 
+            '--lr 3e-5',
+            '--lr-decay-style linear',
+            '--warmup 0.06',
+            '--weight-decay 1.0e-1',
+            '--label-smoothing 0.1',
+        ]
+        env['COMMON_ARGS'] = [
+            '--save-interval 10000',
+            '--log-interval 50',
+            '--eval-interval 1000',
+            '--eval-iters 100',
+        ]
+        env['TASK_ARGS'] = [
+            '--src-seq-length 192',
+            '--tgt-seq-length 32',
+            '--min-tgt-length 0',
+            '--length-penalty 0.6',
+            '--no-repeat-ngram-size 3',
+            '--num-beams 5',
+            '--select-topk',
+            '--eval-batch-size 4',
+        ]
+        return env
+
 
 class Scripts:
     @staticmethod
@@ -542,6 +672,32 @@ class Scripts:
             *env['COMMON_ARGS'],
             *env['TASK_ARGS'],
             '--num-workers 0',  # 不使用多进程数据加载器方便调试
+        ]
+        Scripts.add_ds(py_args, env, ds)
+        return py_args
+
+    @staticmethod
+    def finetune_seq2seq(model_f, task_f, env=None, ds=True, **kw):
+        env = {} if env is None else env
+        env['DATA_ROOT'] = 'data/english_data/NLG'  # 总数据位置
+        model_f(env)
+        task_f(env)
+        env['SAVE_PATH'] = env['MODEL_PATH'] + '/finetune_seq2seq/' + env['TASK_NAME']
+        env['EXPERIMENT_NAME'] = env['EXPERIMENT_NAME'] + '-' + datetime.now().strftime('%m-%d-%H-%M')
+        py_args = [
+            '--finetune',
+            '--experiment-name ' + env['EXPERIMENT_NAME'],
+            '--task ' + env['TASK_NAME'],
+            '--data-dir ' + env['DATA_PATH'],
+            '--save ' + env['SAVE_PATH'],
+            '--checkpoint-activations',
+            '--num-workers 1',
+            '--no-load-lr-scheduler',
+            *env['MODEL_ARGS'],
+            *env['TRAIN_ARGS'],
+            *env['COMMON_ARGS'],
+            *env['TASK_ARGS'],
+            '--overwrite',
         ]
         Scripts.add_ds(py_args, env, ds)
         return py_args
