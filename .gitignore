@@ -12,3 +12,5 @@ apex/
 data.*
 !.vscode/launch.json
 test*
+*.pdf
+events.out.tfevents.*

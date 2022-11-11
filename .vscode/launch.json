@@ -49,7 +49,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--master_port=12367",
-                "--include=localhost:6", // 常调参数
+                "--include=localhost:7", // 常调参数
                 "--hostfile=",
                 // 预训练
                 // "pretrain_glm.py",
@@ -59,15 +59,15 @@
                 "finetune_glm.py",
                 "--custom_model=model_blocklm_base",
                 // 分类模型
-                // "--custom_task=copa",
-                // "--custom_script=finetune_superglue",
+                "--custom_task=wsc_generative",
+                "--custom_script=finetune_superglue",
                 // 语言模型
                 // "--custom_task=zero_wikitext", // zero_lambada zero_lambada_uni zero_lm zero_lm_uni zero_wikitext
                 // "--custom_script=evaluate_lm",
                 // 序列模型
-                "--custom_task=seq_xsum", // seq_blank,seq_cnndm_org,seq_cnndm,seq_xsum,seq_gigaword
-                "--custom_script=finetune_seq2seq", // finetune_blank,finetune_seq2seq
-                "--deepspeed",
+                // "--custom_task=seq_xsum", // seq_blank,seq_cnndm_org,seq_cnndm,seq_xsum,seq_gigaword
+                // "--custom_script=finetune_seq2seq", // finetune_blank,finetune_seq2seq
+                // "--deepspeed",
             ],
             "env": {
                 "NCCL_DEBUG":"info",
